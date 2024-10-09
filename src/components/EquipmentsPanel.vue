@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import { useEquipmentSystem } from "@/stores/equipment-system";
 
 const equipmentStore = useEquipmentSystem()
 
-const currentOperatingCharIndex = ref<[number, number]>([-1, -1])
 const startDragChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
-  currentOperatingCharIndex.value = [rowIndex, colIndex]
+  equipmentStore.currentOperatingCharIndex = [rowIndex, colIndex]
   console.warn(`startDragChar: [${rowIndex}, ${colIndex}], ${e?.dataTransfer?.getData('text')}`)
 }
 
 const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
   e.preventDefault()
-  console.warn(`dropChar: [${rowIndex}, ${colIndex}], ${e?.dataTransfer?.getData('text')}`)
-  console.warn(`exchange: [${currentOperatingCharIndex.value[0]}, ${currentOperatingCharIndex.value[1]}] -> [${rowIndex}, ${colIndex}]`)
+  equipmentStore.exchangeChar(equipmentStore.currentOperatingCharIndex[0], equipmentStore.currentOperatingCharIndex[1], rowIndex, colIndex)
 }
 </script>
 
@@ -21,6 +18,7 @@ const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
   <div id="equipment-list" style="flex: 1; height: 100%;">
     Equipment gain gauge
     {{ `${equipmentStore.charGainPoint} / ${equipmentStore.currentCharGainGaugeMax}` }}
+    <button @click="equipmentStore.getNewChar()">Add</button>
     <div id="equipment-gain-gauge-container">
       <div
         id="equipment-gain-gauge-value"
