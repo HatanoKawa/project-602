@@ -1,34 +1,35 @@
 <script setup lang="ts">
-import { useEquipmentSystem } from "@/stores/equipment-system";
+import { useEquipmentStore } from "@/stores/equipment-system";
+import CharacterSlot from "@/components/character/CharacterSlot.vue";
 
-const equipmentStore = useEquipmentSystem()
+const equipmentStore = useEquipmentStore();
 
 const startDragChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
-  equipmentStore.currentOperatingCharIndex = [rowIndex, colIndex]
-  console.warn(`startDragChar: [${rowIndex}, ${colIndex}], ${e?.dataTransfer?.getData('text')}`)
-}
+  equipmentStore.currentOperatingCharIndex = [rowIndex, colIndex];
+  console.warn(`startDragChar: [${rowIndex}, ${colIndex}], ${e?.dataTransfer?.getData('text')}`);
+};
 
 const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
-  e.preventDefault()
-  equipmentStore.exchangeChar(equipmentStore.currentOperatingCharIndex[0], equipmentStore.currentOperatingCharIndex[1], rowIndex, colIndex)
-}
+  e.preventDefault();
+  equipmentStore.exchangeChar(equipmentStore.currentOperatingCharIndex[0], equipmentStore.currentOperatingCharIndex[1], rowIndex, colIndex);
+};
 </script>
 
 <template>
-  <div id="equipment-list" style="flex: 1; height: 100%;">
+  <div id="char-list">
     Equipment gain gauge
     {{ `${equipmentStore.charGainPoint} / ${equipmentStore.currentCharGainGaugeMax}` }}
     <button @click="equipmentStore.getNewChar()">Add</button>
-    <div id="equipment-gain-gauge-container">
+    <div id="char-gain-gauge-container">
       <div
-        id="equipment-gain-gauge-value"
+        id="char-gain-gauge-value"
         :style="{ width: `${equipmentStore.charGainPoint / equipmentStore.currentCharGainGaugeMax * 100}%` }"
       />
     </div>
     Equipment temporary storage area
-    <div id="equipment-temporary-storage-area">
+    <div id="char-temporary-storage-area">
       <div
-        class="equipment-cell"
+        class="char-cell"
         v-for="(item, index) in equipmentStore.charTempStorage"
         :key="index"
         :draggable="item ? 'true' : 'false'"
@@ -39,18 +40,19 @@ const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
       </div>
     </div>
     Equipment area
-    <div id="equipment-container">
+    <div id="char-container">
       <template v-for="(row, rowIndex) in equipmentStore.charList" :key="rowIndex">
         <div
           v-for="(charSlotData, colIndex) in row"
           :key="colIndex"
-          class="equipment-cell"
-          draggable="true"
+          class="char-cell"
+          :draggable="charSlotData.char ? 'true' : 'false'"
           @dragover.prevent
           @dragstart="(e: DragEvent) => startDragChar(e, rowIndex, colIndex)"
           @drop="(e: DragEvent) => dropChar(e, rowIndex, colIndex)"
         >
-          {{ charSlotData.char || '-' }}
+          <!--{{ charSlotData.char || '-' }}-->
+          <CharacterSlot :slot-data="charSlotData" />
         </div>
       </template>
     </div>
@@ -58,12 +60,13 @@ const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
 </template>
 
 <style scoped>
-#equipment-list {
+#char-list {
+  height: 640px;
   padding: 4px;
   border: solid 1px darkgray;
 }
 
-#equipment-container {
+#char-container {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(10, 1fr);
@@ -75,7 +78,7 @@ const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
   user-select: none;
 }
 
-#equipment-temporary-storage-area {
+#char-temporary-storage-area {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   width: 491px;
@@ -86,7 +89,7 @@ const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
   user-select: none;
 }
 
-.equipment-cell {
+.char-cell {
   width: 48px;
   height: 48px;
   display: flex;
@@ -95,12 +98,12 @@ const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
   background-color: white;
 }
 
-#equipment-gain-gauge-container {
+#char-gain-gauge-container {
   border: solid 1px grey;
   height: 16px;
 }
 
-#equipment-gain-gauge-value {
+#char-gain-gauge-value {
   background-color: green;
   height: 100%;
   transition: width .2s;

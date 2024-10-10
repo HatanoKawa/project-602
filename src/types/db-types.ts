@@ -1,3 +1,5 @@
+import type { EquipmentRealTimeData } from "@/types/equipment-types";
+
 export enum WeaponAttackType {
   // 剑/刀 对随机敌人进行单体攻击
   sword = 'sword',
@@ -11,16 +13,11 @@ export enum WeaponAttackType {
   axe = 'axe',
 }
 
-export enum CastTarget {
-  self = 'self',
-  enemy = 'enemy',
-}
-
 export interface WeaponTableData {
   name: string|string[];
   description: string;
   power: number;
-  attackInterval: number;
+  effectiveInterval: number;
   attackType: WeaponAttackType;
   lifeSteal: number;
   accumulatedValue_Fire: number;
@@ -42,8 +39,10 @@ export interface ArmorTableData {
 export interface ModifierTableData {
   name: string|string[];
   description: string;
-  modifier: (data: any) => any;
+  modifier: (data: EquipmentRealTimeData) => EquipmentRealTimeData;
 }
+
+export type EquipmentTableData = WeaponTableData|ItemTableData|ArmorTableData;
 
 export type TableData = WeaponTableData|ItemTableData|ArmorTableData|ModifierTableData;
 

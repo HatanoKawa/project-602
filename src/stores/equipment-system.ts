@@ -2,154 +2,379 @@ import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import { matchBeginCharSet, wholeCharList } from "@/db/db-helper";
 import { tryParse } from "@/utils/parser";
-import type { Equipment } from "@/types/equipment-types";
+import type { Equipment, EquipmentDirection } from "@/types/equipment-types";
 
-interface CharSlotData {
+export interface CharSlotData {
   char: string;
   // list of equipment id
   belongTo: string[];
   nextTo: string[];
 }
 
-export const useEquipmentSystem = defineStore("equipment-system", () => {
+export const useEquipmentStore = defineStore('equipment-system', () => {
 
   // region 汉字获取与交换相关逻辑
   
   const CHAR_GAIN_GAUGE_MAX = 100;
-  
+
+  // [rowIndex, colIndex]
   const currentOperatingCharIndex = ref([-1, -1]);
   const level = ref(1);
   const currentCharGainGaugeMax = computed(() => {
     return level.value * CHAR_GAIN_GAUGE_MAX;
-  })
+  });
   const charGainPoint = ref(0);
 
-  // temporary storage for equipment, length is 10
-  const charTempStorage = ref<string[]>([])
+  // temporary storage for equipment, length is 10, rowIndex is -1
+  const charTempStorage = ref<string[]>([]);
   // whole 10x10 equipment map
-  const charList = ref<CharSlotData[][]>([])
+  const charList = ref<CharSlotData[][]>([]);
   
   const getNewChar = () => {
     for (let i = 0; i < charTempStorage.value.length; i++) {
       if (!charTempStorage.value[i]) {
-        charTempStorage.value[i] = wholeCharList[Math.floor(Math.random() * wholeCharList.length)]
-        return
+        charTempStorage.value[i] = wholeCharList[Math.floor(Math.random() * wholeCharList.length)];
+        return;
       }
     }
-  }
+  };
 
   const exchangeChar = (fromX: number, fromY: number, toX: number, toY: number) => {
     if (fromX < 0) {
       // exchange from temporary storage
       if (charList.value[toX][toY].char) {
-        console.warn('target slot is not empty')
-        return
+        console.warn('target slot is not empty');
+        return;
       }
-      charList.value[toX][toY].char = charTempStorage.value.splice(fromY, 1, '')[0]
+      if (fromX === -1) {
+        charList.value[toX][toY].char = charTempStorage.value.splice(fromY, 1, '')[0];
+      }
+      if (fromX === -2) {
+        charList.value[toX][toY].char = recycleCharTempStorage.value[fromY];
+        recycleGauge.value -= RECYCLE_CHAR_MAX;
+        refreshRecycleCharTempStorage();
+      }
     } else {
       // exchange from equipment list
-      const fromChar = charList.value[fromX][fromY].char
-      const toChar = charList.value[toX][toY].char
-      charList.value[fromX][fromY].char = toChar
-      charList.value[toX][toY].char = fromChar
+      const fromChar = charList.value[fromX][fromY].char;
+      const toChar = charList.value[toX][toY].char;
+      charList.value[fromX][fromY].char = toChar;
+      charList.value[toX][toY].char = fromChar;
     }
 
-    generateEquipments()
-  }
+    regenerateEquipments(([[fromX, fromY], [toX, toY]].filter(pos => pos[0] >= 0)) as [number, number][]);
+    // generateEquipments();
+  };
 
   const addCharGainPoint = (val: number) => {
-    charGainPoint.value += val
+    charGainPoint.value += val;
     while (charGainPoint.value >= currentCharGainGaugeMax.value) {
-      levelUp()
+      levelUp();
     }
-  }
+  };
   
   // endregion
-  
-  const collectPossibleWords = (posX: number, posY: number): string[] => {
-    // find to left
-    const startChar = charList.value[posX][posY].char
 
-    const findWords = (x: number, y: number, dx: number, dy: number): string => {
+  // region 回收汉字相关逻辑
+
+  // temporary storage for recycled characters, length is 5, rowIndex is -2
+  const RECYCLE_CHAR_MAX = 5;
+  const recycleGauge = ref(0);
+  const canRecycle = computed(() => recycleGauge.value >= RECYCLE_CHAR_MAX);
+  const canRefreshRecycleList = computed(() => recycleGauge.value > 0);
+  const recycleCharTempStorage = ref<string[]>([]);
+  const manuallyRefreshRecycleList = () => {
+    if (canRefreshRecycleList.value) {
+      recycleGauge.value--;
+      refreshRecycleCharTempStorage();
+    }
+  };
+  const refreshRecycleCharTempStorage = () => {
+    recycleCharTempStorage.value = [];
+    // 从汉字列表中随机抽取 5 个汉字填充到回收汉字列表中，且不重复
+    while (recycleCharTempStorage.value.length < 5) {
+      const randomChar = wholeCharList[Math.floor(Math.random() * wholeCharList.length)];
+      if (!recycleCharTempStorage.value.includes(randomChar)) {
+        recycleCharTempStorage.value.push(randomChar);
+      }
+    }
+  };
+  refreshRecycleCharTempStorage();
+
+  const recycleChar = (fromX: number, fromY: number) => {
+    if (fromX >= 0) {
+      // recycle from char list
+      charList.value[fromX][fromY].char = '';
+      regenerateEquipments([[fromX, fromY]]);
+    } else if (fromX === -1) {
+      // recycle from char gain temporary storage
+      charTempStorage.value[fromY] = '';
+    } else if (fromX === -2) {
+      // recycle from recycle temporary storage
+      // just do nothing
+      recycleGauge.value -= RECYCLE_CHAR_MAX;
+      refreshRecycleCharTempStorage();
+    }
+    recycleGauge.value++;
+  };
+
+  // endregion
+
+  // region 装备更新相关逻辑
+
+  const equipmentList = ref<Equipment[]>([]);
+
+  // 返回值为 [左, 右, 上, 下] 四个方向的可能装备字符串，尽可能匹配最长的装备名称，遇到【边缘】或【空格】或【其他的装备起始字符】则停止
+  const collectPossibleWords = (rowIndex: number, colIndex: number): [string, string, string, string] => {
+    // find to left
+    const startChar = charList.value[rowIndex][colIndex].char;
+
+    const findWords = (rowIndex: number, colIndex: number, dRowIndex: number, dColIndex: number): string => {
       let words = startChar;
-      while (x >= 0 && x < 10 && y >= 0 && y < 10) {
-        const nextChar = charList.value[x][y].char;
+      while (rowIndex >= 0 && rowIndex < 10 && colIndex >= 0 && colIndex < 10) {
+        const nextChar = charList.value[rowIndex][colIndex].char;
         if (matchBeginCharSet.has(nextChar) || nextChar === '') break;
         words = nextChar + words;
-        x += dx;
-        y += dy;
+        rowIndex += dRowIndex;
+        colIndex += dColIndex;
       }
       return words;
     };
 
-    const wordsToLeft = findWords(posX - 1, posY, -1, 0);
-    const wordsToRight = findWords(posX + 1, posY, 1, 0);
-    const wordsToTop = findWords(posX, posY - 1, 0, -1);
-    const wordsToBottom = findWords(posX, posY + 1, 0, 1);
-    
+    const wordsToLeft = findWords(rowIndex, colIndex - 1, 0, -1);
+    const wordsToRight = findWords(rowIndex, colIndex + 1, 0, +1);
+    const wordsToTop = findWords(rowIndex - 1, colIndex, -1, 0);
+    const wordsToBottom = findWords(rowIndex + 1, colIndex, 1, 0);
+
     if (wordsToLeft.length > 1 || wordsToRight.length > 1 || wordsToTop.length > 1 || wordsToBottom.length > 1) {
-      const wordsToReturn = [wordsToLeft, wordsToRight, wordsToTop, wordsToBottom]
-      return wordsToReturn.filter((item) => item.length > 1)
+      const wordsToReturn = [wordsToLeft, wordsToRight, wordsToTop, wordsToBottom];
+      return wordsToReturn.map((item) => item.length > 1 ? item : '') as [string, string, string, string];
     } else {
-      return [wordsToLeft]
+      return [wordsToLeft, '', '', ''];
     }
-  }
-  
-  const tryFindEquipments = (posX: number, posY: number) => {
-    const wordsList = collectPossibleWords(posX, posY)
-    const resEquipmentList: Equipment[] = []
-    // console.warn(wordsList)
-    wordsList.forEach(words => {
-      const parseRes = tryParse(words)
+  };
+
+  // 从指定位置开始尝试向四个方向解析装备
+  const tryFindEquipments = (rowIndex: number, colIndex: number) => {
+    const wordsList = collectPossibleWords(rowIndex, colIndex);
+    const resEquipmentList: Equipment[] = [];
+    wordsList.forEach((words, wordsIndex) => {
+      if (!words) return;
+      const wordDirection: EquipmentDirection = ['l', 'r', 't', 'b'][wordsIndex] as EquipmentDirection;
+      const parseRes = tryParse(words, [rowIndex, colIndex], wordDirection);
       if (parseRes) {
-        resEquipmentList.push(parseRes)
+        resEquipmentList.push(parseRes);
       }
-    })
+    });
     if (resEquipmentList.some(equipment => equipment.fullLength > 1)) {
-      // console.warn(resEquipmentList.filter(equipment => equipment.fullLength > 1))
-      return resEquipmentList.filter(equipment => equipment.fullLength > 1)
+      return resEquipmentList.filter(equipment => equipment.fullLength > 1);
     }
-    // console.warn([resEquipmentList[0]])
-    return [resEquipmentList[0]]
-  }
+    return [resEquipmentList[0]];
+  };
   
+  // 排序装备列表，按照装备长度从大到小排序，长度相同的按照装备名称排序
+  const sortEquipments = () => {
+    equipmentList.value.sort((a, b) => {
+      if (a.fullLength === b.fullLength) {
+        return a.fullName.localeCompare(b.fullName);
+      }
+      return b.fullLength - a.fullLength;
+    });
+  };
+
+  // 重新生成装备列表
+  const regenerateEquipments = (relatedPos: [number, number][]) => {
+
+    // 收集所有需要删除的装备 ID
+    const equipmentIdToRemove: Set<string> = new Set<string>();
+    relatedPos.forEach(pos => {
+      const charSlot = charList.value[pos[0]][pos[1]];
+      charSlot.belongTo.forEach(equipmentId => equipmentIdToRemove.add(equipmentId));
+    });
+    console.log('remove equipments: ', equipmentIdToRemove);
+
+    // 遍历所有字符格，删除所有与本次移动相关的装备 ID
+    charList.value.forEach(row => {
+      row.forEach(charSlot => {
+        for(let i = charSlot.nextTo.length - 1; i >= 0; i--) {
+          if (equipmentIdToRemove.has(charSlot.nextTo[i]))
+            charSlot.nextTo.splice(i, 1);
+        }
+        for(let i = charSlot.belongTo.length - 1; i >= 0; i--) {
+          if (equipmentIdToRemove.has(charSlot.belongTo[i]))
+            charSlot.belongTo.splice(i, 1);
+        }
+        // charSlot.nextTo = charSlot.nextTo.filter(equipmentId => !equipmentIdToRemove.has(equipmentId));
+        // charSlot.belongTo = charSlot.belongTo.filter(equipmentId => !equipmentIdToRemove.has(equipmentId));
+      });
+    });
+
+    // 在装备列表中删除所有与本次移动相关的装备
+    for (let i = equipmentList.value.length - 1; i >= 0; i--) {
+      if (equipmentIdToRemove.has(equipmentList.value[i].id)) {
+        equipmentList.value.splice(i, 1);
+      }
+    }
+
+    // 重新生成装备列表
+    generateEquipments();
+  };
+
+  const mergeEquipments = (targetEquipments: Equipment[]) => {
+    const equipmentsToAdd: Equipment[] = [...targetEquipments];
+    // 移除待添加列表中重复的装备，移除系统中装备列表不应存在的装备
+    for (let i = equipmentList.value.length - 1; i >= 0; i--) {
+      const equipmentId = equipmentList.value[i].id;
+      const targetIndex = equipmentsToAdd.findIndex(equipment => equipment.id === equipmentId);
+      if (targetIndex >= 0) {
+        // 如果待添加列表中存在相同的装备，则移除
+        equipmentsToAdd.splice(targetIndex, 1);
+      } else {
+        // 如果系统中存在的装备不在待添加列表中，则移除
+        equipmentList.value.splice(i, 1);
+      }
+    }
+
+    // 合并待添加列表到系统中
+    equipmentsToAdd.forEach(equipment => {
+      equipmentList.value.push(equipment);
+      setBelongAndNextTo(equipment);
+    });
+    sortEquipments();
+  };
+
+  // 生成装备列表
   const generateEquipments = () => {
-    for (let x = 0; x < 10; x++) {
-      for (let y = 0; y < 10; y++) {
-        if (matchBeginCharSet.has(charList.value[x][y].char)) {
+    const tempEquipmentList: Equipment[] = [];
+    for (let rowIndex = 0; rowIndex < 10; rowIndex++) {
+      for (let colIndex = 0; colIndex < 10; colIndex++) {
+        if (matchBeginCharSet.has(charList.value[rowIndex][colIndex].char)) {
           // 当前位置是装备的起始位置
-          tryFindEquipments(x, y)
+          // todo 由于Item与Armor的parser还未完成，所以返回值可能为空数组，需要过滤掉
+          // tempEquipmentList.push(...tryFindEquipments(rowIndex, colIndex));
+          tempEquipmentList.push(...tryFindEquipments(rowIndex, colIndex).filter(equipment => equipment));
         }
       }
     }
-  }
+    mergeEquipments(tempEquipmentList);
+    // console.log('equipmentList', equipmentList.value);
+  };
+
+  // 根据目标位置、方向、装备 ID，设置装备两侧的相邻关系
+  const setNextTo = (curPos: [number, number], direction: EquipmentDirection, equipmentId: string) => {
+    switch (direction) {
+      case "l":
+      case "r":
+        // 如果是左右方向匹配，则当前位置的上下两个位置相邻于此装备
+        if (curPos[0] - 1 >= 0)
+          charList.value[curPos[0] - 1][curPos[1]].nextTo.push(equipmentId);
+        if (curPos[0] + 1 < 10)
+          charList.value[curPos[0] + 1][curPos[1]].nextTo.push(equipmentId);
+        break;
+      case "t":
+      case "b":
+        // 如果是上下方向匹配，则当前位置的左右两个位置相邻于此装备
+        if (curPos[1] - 1 >= 0)
+          charList.value[curPos[0]][curPos[1] - 1].nextTo.push(equipmentId);
+        if (curPos[1] + 1 < 10)
+          charList.value[curPos[0]][curPos[1] + 1].nextTo.push(equipmentId);
+        break;
+    }
+  };
+
+  const setBelongAndNextTo = (equipmentData: Equipment) => {
+    const { rowIndex, colIndex, direction, fullLength: equipmentLength, id: equipmentId } = equipmentData;
+    const curPos: [number, number] = [rowIndex, colIndex];
+    let lastCount = equipmentLength;
+    // region 反推出前一个位置，若前一个位置存在，则前一个位置相邻于此装备
+    const posBefore: [number, number] = [rowIndex, colIndex];
+    switch (direction) {
+      case "l": posBefore[1]++; break;
+      case "r": posBefore[1]--; break;
+      case "t": posBefore[0]++; break;
+      case "b": posBefore[0]--; break;
+    }
+    if (posBefore[0] >= 0 && posBefore[0] < 10 && posBefore[1] >= 0 && posBefore[1] < 10) {
+      charList.value[posBefore[0]][posBefore[1]].nextTo.push(equipmentId);
+    }
+    // endregion
+
+    while (lastCount >= 0) {
+      // 设置当前位置的相邻和从属关系
+      if (lastCount === 0) {
+        // 已经匹配结束，则当前位置若合法便相邻于此装备
+        if (curPos[0] >= 0 && curPos[0] < 10 && curPos[1] >= 0 && curPos[1] < 10) {
+          charList.value[curPos[0]][curPos[1]].nextTo.push(equipmentId);
+        }
+      } else {
+        // 未匹配结束，则当前位置属于此装备
+        charList.value[curPos[0]][curPos[1]].belongTo.push(equipmentId);
+        // 设置两侧相邻
+        setNextTo(curPos, direction, equipmentId);
+      }
+      // 根据方向，推进到下一个位置
+      switch (direction) {
+        case 'l': curPos[1]--; break;
+        case 'r': curPos[1]++; break;
+        case 't': curPos[0]--; break;
+        case 'b': curPos[0]++; break;
+      }
+      lastCount--;
+    }
+  };
+
+  // endregion
+  
+  // region 装备高亮相关逻辑  
+  
+  const currentHighlightEquipmentId= ref('');
+  const highlightEquipment = (equipmentId: string) => {
+    currentHighlightEquipmentId.value = equipmentId;
+  };
+  const unHighlightEquipment = () => {
+    currentHighlightEquipmentId.value = '';
+  };
+  
+  // endregion
 
   const levelUp = () => {
-    level.value++
-    charGainPoint.value = 0
-    getNewChar()
-  }
+    charGainPoint.value -= currentCharGainGaugeMax.value;
+    level.value++;
+    getNewChar();
+  };
 
   const resetPlayerState = () => {
     level.value = 1;
     charGainPoint.value = 0;
     charTempStorage.value = Array.from({ length: 10 }, () => "");
     charList.value = Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => ({ char: '', nextTo: [], belongTo: [] })));
-  }
-  resetPlayerState()
+  };
+  resetPlayerState();
 
   return {
+    RECYCLE_CHAR_MAX,
+
     level,
     currentCharGainGaugeMax,
     charGainPoint,
     charTempStorage,
     charList,
     currentOperatingCharIndex,
+    equipmentList,
+    currentHighlightEquipmentId,
+    recycleGauge,
+    canRecycle,
+    canRefreshRecycleList,
+    recycleCharTempStorage,
 
     resetPlayerState,
     getNewChar,
     levelUp,
     addCharGainPoint,
     exchangeChar,
-  }
-})
+    highlightEquipment,
+    unHighlightEquipment,
+    recycleChar,
+    manuallyRefreshRecycleList,
+  };
+});

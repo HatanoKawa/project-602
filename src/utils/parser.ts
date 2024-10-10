@@ -5,7 +5,7 @@ import {
   type Equipment_Item,
   type Equipment_Modifier,
   type Equipment_Weapon,
-  EquipmentType
+  EquipmentType, type EquipmentDirection
 } from "@/types/equipment-types";
 import type { MatchNode, ModifierTableData, TableData, WeaponTableData } from "@/types/db-types";
 import {
@@ -30,7 +30,7 @@ export const tryParseModifier = (matchList: string[]): ParseRes<Equipment_Modifi
       const char = matchList[i];
       if (!curMatchNode.derivative || !curMatchNode.derivative[char]) {
         // 如果没有这个字符的派生节点，则修饰符的匹配终止
-        break
+        break;
       } else {
         // 如果有这个字符的派生节点，则继续向下匹配
         tempName = char + tempName;
@@ -52,16 +52,16 @@ export const tryParseModifier = (matchList: string[]): ParseRes<Equipment_Modifi
           fullLength: fullName.length,
           tableData: curTableData as ModifierTableData,
         }
-      }
+      };
     }
   }
   return {
     isSuccess: false,
     res: null,
-  }
-}
+  };
+};
 
-export const tryParseAsWeapon = (matchList: string[]): ParseRes<Equipment_Weapon> => {
+export const tryParseAsWeapon = (matchList: string[], startPos: [number, number], startDirection: EquipmentDirection): ParseRes<Equipment_Weapon> => {
   const nextChar = matchList[0];
   if (weaponBaseCharSet.has(nextChar)) {
     let curTableData: TableData|null = weaponMatchTree[nextChar].tableData;
@@ -109,13 +109,17 @@ export const tryParseAsWeapon = (matchList: string[]): ParseRes<Equipment_Weapon
       return {
         isSuccess: true,
         res: {
+          id: `${startPos[0]}${startPos[1]}${startDirection}_${fullName}`,
+          rowIndex: startPos[0],
+          colIndex: startPos[1],
+          direction: startDirection,
           type: EquipmentType.weapon,
           fullName,
           fullLength: fullName.length,
           tableData: curTableData as WeaponTableData,
           modifiers: modifierList,
         }
-      }
+      };
     }
   }
 
@@ -123,28 +127,30 @@ export const tryParseAsWeapon = (matchList: string[]): ParseRes<Equipment_Weapon
     isSuccess: false,
     res: null,
   };
-}
+};
 
 const tryParseAsItem = (matchList: string[]): ParseRes<Equipment_Item> => {
-  console.error('tryParseAsItem is not implemented yet', matchList);
+  // todo tryParseAsItem is not implemented yet
+  // console.error('tryParseAsItem is not implemented yet', matchList);
   return {
     isSuccess: false,
     res: null,
   };
-}
+};
 
 const tryParseAsArmor = (matchList: string[]): ParseRes<Equipment_Armor> => {
-  console.error('tryParseAsArmor is not implemented yet', matchList);
+  // todo tryParseAsArmor is not implemented yet
+  // console.error('tryParseAsArmor is not implemented yet', matchList);
   return {
     isSuccess: false,
     res: null,
   };
-}
+};
 
-export const tryParse = (inputStr: string): Equipment|null => {
+export const tryParse = (inputStr: string, startPos: [number, number], startDirection: EquipmentDirection): Equipment|null => {
   const listToMatch = inputStr.split('').reverse();
 
-  const matchWeaponRes = tryParseAsWeapon(listToMatch);
+  const matchWeaponRes = tryParseAsWeapon(listToMatch, startPos, startDirection);
   if (matchWeaponRes.isSuccess) {
     return matchWeaponRes.res!;
   }
@@ -160,7 +166,7 @@ export const tryParse = (inputStr: string): Equipment|null => {
   }
 
   return null;
-}
+};
 
 // export const tryParse = (inputStr: string): Prop[] => {
 //   const parseRes = tryParseOnOneDirection(inputStr);
@@ -175,15 +181,15 @@ const DEBUG_printCharSet = () => {
   console.log('modifierBaseCharSet', modifierBaseCharSet);
   console.log('matchBeginCharSet', matchBeginCharSet);
   console.log('wholeCharSet', wholeCharSet);
-}
+};
 
 // DEBUG_printCharSet()
 
 const DEBUG = () => {
-  console.log(tryParseAsWeapon('剑'.split('').reverse()))
-  console.log(tryParseAsWeapon('长剑'.split('').reverse()))
-  console.log(tryParseAsWeapon('偃月刀'.split('').reverse()))
-  console.log(tryParseAsWeapon('长长长青龙锐利偃月火刀'.split('').reverse()))
-}
+  console.log(tryParseAsWeapon('剑'.split('').reverse(), [4, 4], 'l'));
+  console.log(tryParseAsWeapon('长剑'.split('').reverse(), [4, 4], 'l'));
+  console.log(tryParseAsWeapon('偃月刀'.split('').reverse(), [4, 4], 'l'));
+  console.log(tryParseAsWeapon('长长长青龙锐利偃月火刀'.split('').reverse(), [4, 4], 'l'));
+};
 
 // DEBUG()

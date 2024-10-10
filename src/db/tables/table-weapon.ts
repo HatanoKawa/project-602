@@ -4,7 +4,7 @@ export const tableData_Weapon: WeaponTableData[] = [
   {
     name: ['刀', '剑'],
     power: 100,
-    attackInterval: 500,
+    effectiveInterval: 500,
     attackType: WeaponAttackType.sword,
     description: '只是普通的刀',
     lifeSteal: 0,
@@ -15,7 +15,7 @@ export const tableData_Weapon: WeaponTableData[] = [
   {
     name: '偃月刀',
     power: 150,
-    attackInterval: 400,
+    effectiveInterval: 400,
     attackType: WeaponAttackType.sword,
     description: '偃月刀',
     lifeSteal: 0,
@@ -26,7 +26,7 @@ export const tableData_Weapon: WeaponTableData[] = [
   {
     name: '青龙偃月刀',
     power: 300,
-    attackInterval: 300,
+    effectiveInterval: 300,
     attackType: WeaponAttackType.sword,
     description: '大名鼎鼎的青龙偃月刀',
     lifeSteal: 0,
@@ -37,10 +37,10 @@ export const tableData_Weapon: WeaponTableData[] = [
   {
     name: '妖刀',
     power: 10,
-    attackInterval: 100,
+    effectiveInterval: 100,
     attackType: WeaponAttackType.sword,
     description: '妖刀',
-    lifeSteal: 5,
+    lifeSteal: 50,
     accumulatedValue_Fire: 0,
     accumulatedValue_Ice: 0,
     accumulatedValue_Bleeding: 50,
@@ -48,10 +48,10 @@ export const tableData_Weapon: WeaponTableData[] = [
   {
     name: '村正妖刀',
     power: 20,
-    attackInterval: 100,
+    effectiveInterval: 100,
     attackType: WeaponAttackType.sword,
     description: '大名鼎鼎的村正妖刀',
-    lifeSteal: 10,
+    lifeSteal: 200,
     accumulatedValue_Fire: 0,
     accumulatedValue_Ice: 0,
     accumulatedValue_Bleeding: 100,
@@ -59,7 +59,7 @@ export const tableData_Weapon: WeaponTableData[] = [
   {
     name: '棍',
     power: 50,
-    attackInterval: 1000,
+    effectiveInterval: 1000,
     attackType: WeaponAttackType.stick,
     description: '只是普通的棍',
     lifeSteal: 0,
@@ -70,7 +70,7 @@ export const tableData_Weapon: WeaponTableData[] = [
   {
     name: '弓',
     power: 150,
-    attackInterval: 800,
+    effectiveInterval: 800,
     attackType: WeaponAttackType.bow,
     description: '只是普通的弓',
     lifeSteal: 0,
@@ -81,7 +81,7 @@ export const tableData_Weapon: WeaponTableData[] = [
   {
     name: '矛',
     power: 70,
-    attackInterval: 600,
+    effectiveInterval: 600,
     attackType: WeaponAttackType.spear,
     description: '只是普通的矛',
     lifeSteal: 0,
@@ -92,7 +92,7 @@ export const tableData_Weapon: WeaponTableData[] = [
   {
     name: '蛇矛',
     power: 100,
-    attackInterval: 1000,
+    effectiveInterval: 1000,
     attackType: WeaponAttackType.spear,
     description: '蛇矛',
     lifeSteal: 0,
@@ -103,7 +103,7 @@ export const tableData_Weapon: WeaponTableData[] = [
   {
     name: '丈八蛇矛',
     power: 200,
-    attackInterval: 500,
+    effectiveInterval: 500,
     attackType: WeaponAttackType.spear,
     description: '大名鼎鼎的丈八蛇矛',
     lifeSteal: 0,
@@ -114,7 +114,7 @@ export const tableData_Weapon: WeaponTableData[] = [
   {
     name: '斧',
     power: 100,
-    attackInterval: 800,
+    effectiveInterval: 800,
     attackType: WeaponAttackType.axe,
     description: '只是普通的斧',
     lifeSteal: 0,

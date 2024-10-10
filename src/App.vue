@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import { RouterLink, RouterView } from 'vue-router';
+import { useGameCoreStore } from "@/stores/game-core";
+
+const gameCoreStore = useGameCoreStore();
 </script>
 
 <template>
@@ -8,20 +10,22 @@ import HelloWorld from './components/HelloWorld.vue'
   <div style="width: 100%; display: flex; justify-content: center;">
     <RouterLink to="/">Introduction</RouterLink>
     <RouterLink to="/game">Game</RouterLink>
+
+    <button @click="gameCoreStore.startGame()">Start Game</button>
+    <button @click="gameCoreStore.pauseGame()">Pause Game</button>
   </div>
 
-  <RouterView />
+  <RouterView v-slot="{ Component }">
+    <keep-alive>
+      <component :is="Component" />
+    </keep-alive>
+  </RouterView>
 </template>
 
 <style scoped>
 header {
   line-height: 1.5;
   max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
 }
 
 nav {
@@ -31,10 +35,6 @@ nav {
   margin-top: 2rem;
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
 nav a.router-link-exact-active:hover {
   background-color: transparent;
 }
@@ -42,7 +42,6 @@ nav a.router-link-exact-active:hover {
 nav a {
   display: inline-block;
   padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
 }
 
 nav a:first-of-type {
@@ -53,7 +52,6 @@ nav a:first-of-type {
   header {
     display: flex;
     place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
   }
 
   .logo {

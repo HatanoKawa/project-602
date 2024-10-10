@@ -10,5 +10,9 @@ module.exports = {
   ],
   parserOptions: {
     ecmaVersion: 'latest'
+  },
+  rules: {
+    // 保持添加;在每行末尾
+    'semi': ['warn', 'always'],
   }
 }
