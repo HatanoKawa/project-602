@@ -6,6 +6,7 @@ export interface EnemyTableData {
   elementalGaugeMax_Ice: number;
   elementalGaugeMax_Bleeding: number;
   xpReward: number;
+  rank: number;
 }
 
 export interface EnemyRealTimeData {

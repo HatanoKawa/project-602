@@ -19,10 +19,15 @@ const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
 
 <template>
   <div id="char-list">
-    Equipment gain gauge
-    <span>level: {{ gameCoreStore.level }}</span>
-    <span> xp gauge: {{ `${gameCoreStore.xpGauge} / ${gameCoreStore.xpGaugeMax}` }}</span>
-    <button @click="equipmentStore.addRandomNewChar()">Add</button>
+    <div>
+      <span>当前等级：</span>
+      <span>{{ gameCoreStore.level }}</span>
+      <button v-show="gameCoreStore.debugMode" @click="equipmentStore.addRandomNewChar()">Add</button>
+    </div>
+    <div>
+      <span>升级进度: </span>
+      <span>{{ `${gameCoreStore.xpGauge} / ${gameCoreStore.xpGaugeMax}` }}</span>
+    </div>
     <div id="char-gain-gauge-container">
       <div
         id="char-gain-gauge-value"

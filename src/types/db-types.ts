@@ -1,13 +1,13 @@
 import type { EquipmentRealTimeData } from "@/types/equipment-types";
 
-export enum WeaponAttackType {
+export enum EquipmentAttackType {
   // 剑/刀 对随机敌人进行单体攻击
   sword = 'sword',
   // 棍/杖 选取随机敌人进行3x3范围攻击
   stick = 'stick',
   // 弓 优先攻击血量最少的敌人
   bow = 'bow',
-  // 矛枪戟 优先攻击攻击力最高的敌人
+  // 矛枪戟 优先攻击血量最高的敌人
   spear = 'spear',
   // 斧 优先攻击血量最高的敌人，并造成十字范围伤害
   axe = 'axe',
@@ -18,7 +18,7 @@ export interface WeaponTableData {
   description: string;
   power: number;
   effectiveInterval: number;
-  attackType: WeaponAttackType;
+  attackType: EquipmentAttackType;
   lifeSteal: number;
   accumulatedValue_Fire: number;
   accumulatedValue_Ice: number;

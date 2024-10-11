@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import { useEnemyStore } from "@/stores/enemy";
 import EnemySlotCard from "@/components/enemy/EnemySlotCard.vue";
+import { computed } from "vue";
 
 const enemyStore = useEnemyStore();
+
+const enemyMultiplierStr = computed(() => {
+  return `${(enemyStore.currentEnemyStateMultipliers * 100).toFixed(2)} %`;
+});
 </script>
 
 <template>
@@ -20,8 +25,8 @@ const enemyStore = useEnemyStore();
     </div>
     <div id="enemy-panel-status">
       <div class="label-value-container">
-        <span>当前敌人属性倍率：</span>
-        <span>100</span>
+        <span>敌人属性倍率：</span>
+        <span>{{ enemyMultiplierStr }}</span>
       </div>
     </div>
   </div>

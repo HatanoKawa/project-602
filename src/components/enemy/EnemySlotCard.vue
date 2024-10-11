@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { MapSlotData } from "@/stores/enemy";
-import { computed } from "vue";
+import { computed, watchEffect } from "vue";
 
 const props = defineProps<{
   slotData: MapSlotData;
@@ -8,7 +8,10 @@ const props = defineProps<{
   colIndex: number;
 }>();
 
-const isEmpty = computed(() => !props.slotData.enemy)
+const isEmpty = computed(() => !props.slotData.enemy);
+const currentEnemyHp = computed(() => props.slotData.enemy?.health);
+const currentEnemyHpMax = computed(() => props.slotData.enemy?.healthMax);
+const currentEnemyTableData = computed(() => props.slotData.enemy?.tableData);
 </script>
 
 <template>

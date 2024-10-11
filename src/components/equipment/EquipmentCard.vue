@@ -9,10 +9,13 @@ import {
 import { computed, ref, watchEffect } from "vue";
 import { useEquipmentStore } from "@/stores/equipment";
 import RealTimeValue from "@/components/equipment/RealTimeValue.vue";
+import { useEnemyStore } from "@/stores/enemy";
 
 const props = defineProps<{
   equipmentDetail: Equipment;
 }>();
+
+const enemyStore = useEnemyStore();
 
 const equipmentRealTimeStatus = computed<EquipmentRealTimeData|null>(() => {
   let realTimeStatus: EquipmentRealTimeData|null = null;
@@ -54,28 +57,40 @@ const highlightEquipment = () => {
 const effectiveGauge = ref(0);
 
 const tryGetTargetEnemies = () => {
-  // todo get enemy
-  return [];
+  if (enemyStore.mapIsEmpty) {
+    return [];
+  } else {
+    if (props.equipmentDetail.type === EquipmentType.weapon) {
+      return enemyStore.getEnemyPositionByAttackType((equipmentRealTimeStatus.value as WeaponRealTimeData).attackType);
+    } else {
+      // todo other equipment type
+      return [];
+    }
+  }
 };
 
 const addToEffectiveGauge = (val: number) => {
   effectiveGauge.value += val;
   // 当装备主动攻击槽积累值大于攻击间隔时，尝试进行攻击
   if (effectiveGauge.value > effectiveInterval.value) {
-    while (effectiveGauge.value > effectiveInterval.value) {
-      const targetEnemies = tryGetTargetEnemies();
-      if (targetEnemies.length > 0) {
-        // 如果找到目标，则对找到的所有目标进行攻击，并将积累值减去攻击间隔
-        targetEnemies.forEach((enemy) => {
-          // todo attack enemy
-        });
-        effectiveGauge.value = effectiveGauge.value - effectiveInterval.value;
-      } else {
-        // 如果没有找到目标，不进行攻击，并将积累值设置为攻击间隔，退出循环
-        effectiveGauge.value = effectiveInterval.value;
-        break;
+    if (equipmentRealTimeStatus.value?.type === EquipmentType.weapon) {
+      while (effectiveGauge.value > effectiveInterval.value) {
+        const targetEnemiesPosition = tryGetTargetEnemies();
+        if (targetEnemiesPosition.length > 0) {
+          // 如果找到目标，则对找到的所有目标进行攻击，并将积累值减去攻击间隔
+          enemyStore.attackEnemyAtPosition(targetEnemiesPosition, equipmentRealTimeStatus.value!);
+          effectiveGauge.value = effectiveGauge.value - effectiveInterval.value;
+        } else {
+          // 如果没有找到目标，不进行攻击，并将积累值设置为攻击间隔，退出循环
+          effectiveGauge.value = effectiveInterval.value;
+          break;
+        }
       }
+    } else {
+      // todo other equipment type
+      effectiveGauge.value = effectiveInterval.value;
     }
+
   }
 };
 

@@ -354,8 +354,8 @@ export const useEquipmentStore = defineStore('equipment', () => {
   };
   init();
   
-  const gameFlushHandler = (increaseValue: number) => {
-    increaseAllEffectiveGauge(increaseValue);
+  const gameFlushHandler = (increaseTime: number) => {
+    increaseAllEffectiveGauge(increaseTime);
   };
 
   return {

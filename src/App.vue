@@ -6,6 +6,7 @@ const gameCoreStore = useGameCoreStore();
 </script>
 
 <template>
+  <h1 style="text-align: center;">Project 602</h1>
 
   <div style="width: 100%; display: flex; justify-content: center;">
     <RouterLink to="/">Introduction</RouterLink>

@@ -2,7 +2,7 @@ import {
   type ArmorTableData,
   type ItemTableData,
   type ModifierTableData,
-  WeaponAttackType,
+  EquipmentAttackType,
   type WeaponTableData
 } from "@/types/db-types";
 
@@ -92,7 +92,7 @@ export interface WeaponRealTimeData {
   power: number;
   castTarget: CastTarget;
   effectiveInterval: number;
-  attackType: WeaponAttackType;
+  attackType: EquipmentAttackType;
   lifeSteal: number;
   accumulatedValue_Fire: number;
   accumulatedValue_Ice: number;

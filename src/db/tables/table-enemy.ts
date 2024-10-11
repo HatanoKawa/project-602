@@ -8,7 +8,8 @@ export const tableData_Enemy: EnemyTableData[] = [
     elementalGaugeMax_Fire: 100,
     elementalGaugeMax_Ice: 100,
     elementalGaugeMax_Bleeding: 100,
-    xpReward: 100
+    xpReward: 100,
+    rank: 0
   },
   {
     name: 'Goblin',
@@ -17,7 +18,8 @@ export const tableData_Enemy: EnemyTableData[] = [
     elementalGaugeMax_Fire: 200,
     elementalGaugeMax_Ice: 200,
     elementalGaugeMax_Bleeding: 200,
-    xpReward: 200
+    xpReward: 200,
+    rank: 1
   },
   {
     name: 'Orc',
@@ -26,7 +28,8 @@ export const tableData_Enemy: EnemyTableData[] = [
     elementalGaugeMax_Fire: 300,
     elementalGaugeMax_Ice: 300,
     elementalGaugeMax_Bleeding: 300,
-    xpReward: 300
+    xpReward: 300,
+    rank: 2
   }
 ];
 

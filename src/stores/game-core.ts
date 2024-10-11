@@ -5,9 +5,13 @@ import { useEnemyStore } from "@/stores/enemy";
 
 export const useGameCoreStore = defineStore('game-core', () => {
 
+  const debugMode = ref(true);
+
   // 游戏状态刷新的时间间隔为 100ms
   const GAME_FLUSH_INTERVAL = 100;
-  const gameSpeedMultiplier = ref(1);
+  const GAME_SPEED_POSSIBLE_VALUES = [0.5, 1, 2, 4] as const;
+  const gameSpeedMultiplier = ref<typeof GAME_SPEED_POSSIBLE_VALUES[number]>(1);
+  const increaseTimePerFlush = computed(() => GAME_FLUSH_INTERVAL * gameSpeedMultiplier.value);
 
   // region 等级相关逻辑
   
@@ -49,10 +53,10 @@ export const useGameCoreStore = defineStore('game-core', () => {
   // 游戏状态刷新
   const gameStatusFlush = () => {
     const equipmentStore = useEquipmentStore();
-    equipmentStore.gameFlushHandler(gameSpeedMultiplier.value * GAME_FLUSH_INTERVAL);
+    equipmentStore.gameFlushHandler(increaseTimePerFlush.value);
 
     const enemyStore = useEnemyStore();
-    enemyStore.gameFlushHandler(gameSpeedMultiplier.value * GAME_FLUSH_INTERVAL);
+    enemyStore.gameFlushHandler(increaseTimePerFlush.value);
   };
 
   let gameRunningInterval: any;
@@ -62,10 +66,10 @@ export const useGameCoreStore = defineStore('game-core', () => {
     gameRunningInterval = null;
   };
 
-  // todo Stop Game
   const stopGame = () => {
     clearInterval(gameRunningInterval);
     gameRunningInterval = null;
+    // todo Stop Game Logic
   };
   
   const startGame = () => {
@@ -78,6 +82,8 @@ export const useGameCoreStore = defineStore('game-core', () => {
   
   
   return {
+    debugMode,
+
     gameSpeedMultiplier,
     level,
     xpGauge,
