@@ -2,14 +2,13 @@
 import CharactersPanel from "@/components/character/CharactersPanel.vue";
 import EquipmentsPanel from "@/components/equipment/EquipmentsPanel.vue";
 import CharacterRecyclePanel from "@/components/character/CharacterRecyclePanel.vue";
+import EnemyPanel from "@/components/enemy/EnemyPanel.vue";
 </script>
 
 <template>
   <div style="display: flex; height: 1000px;">
     <div style="height: 100%;">
-      <div id="game-scene" class="base-frame" style="width: 1200px; height: 800px;">
-        scene
-      </div>
+      <EnemyPanel />
       <div style="display: flex; height: 200px;">
         <div id="avatar" class="base-frame" style="width: 200px;">
           QUINN RIVER

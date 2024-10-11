@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useEquipmentStore } from "@/stores/equipment-system";
+import { useEquipmentStore } from "@/stores/equipment";
 import EquipmentCard from "@/components/equipment/EquipmentCard.vue";
 
 const equipmentStore = useEquipmentStore();

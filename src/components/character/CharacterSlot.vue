@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useEquipmentStore, type CharSlotData } from "@/stores/equipment-system";
+import { useEquipmentStore, type CharSlotData } from "@/stores/equipment";
 import { computed } from "vue";
 
 const props = defineProps<{

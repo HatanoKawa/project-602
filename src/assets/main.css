@@ -13,3 +13,10 @@ a,
     background-color: hsla(160, 100%, 37%, 0.2);
   }
 }
+
+.label-value-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}

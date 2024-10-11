@@ -7,8 +7,7 @@ import {
   type WeaponRealTimeData
 } from "@/types/equipment-types";
 import { computed, ref, watchEffect } from "vue";
-import { useGameCoreStore } from "@/stores/game-core";
-import { useEquipmentStore } from "@/stores/equipment-system";
+import { useEquipmentStore } from "@/stores/equipment";
 import RealTimeValue from "@/components/equipment/RealTimeValue.vue";
 
 const props = defineProps<{
@@ -47,8 +46,6 @@ const equipmentFullName = computed(() => {
   return props.equipmentDetail.fullName;
 });
 
-
-const gameCoreStore = useGameCoreStore();
 const equipmentStore = useEquipmentStore();
 
 const highlightEquipment = () => {
@@ -84,9 +81,9 @@ const addToEffectiveGauge = (val: number) => {
 
 watchEffect((onCleanup) => {
   if (effectiveInterval.value > 0) {
-    const gaugeSymbol = gameCoreStore.addEffectiveGauge(addToEffectiveGauge);
+    const gaugeSymbol = equipmentStore.addEffectiveGauge(addToEffectiveGauge);
     onCleanup(() => {
-      gameCoreStore.removeEffectiveGauge(gaugeSymbol);
+      equipmentStore.removeEffectiveGauge(gaugeSymbol);
     });
   }
 });

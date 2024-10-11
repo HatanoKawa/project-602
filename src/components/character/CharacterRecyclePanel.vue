@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useEquipmentStore } from "@/stores/equipment-system";
+import { useEquipmentStore } from "@/stores/equipment";
 
 const equipmentStore = useEquipmentStore();
 const startDragChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
@@ -24,7 +24,8 @@ const startDragChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
     </div>
     <div class="recycle-zone-container">
       <div class="recycle-zone" @drop="equipmentStore.recycleChar(equipmentStore.currentOperatingCharIndex[0], equipmentStore.currentOperatingCharIndex[1])">
-        回收区 {{ `${equipmentStore.recycleGauge}/${equipmentStore.RECYCLE_CHAR_MAX}` }}
+        <div class="recycle-zone-desc">将不需要的汉字拖动到这里来回收</div>
+        <div style="font-size: 24px;">回收进度 {{ `${equipmentStore.recycleGauge}/${equipmentStore.RECYCLE_CHAR_MAX}` }}</div>
       </div>
     </div>
     <div class="button-container">
@@ -32,7 +33,7 @@ const startDragChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
         :disabled="equipmentStore.canRefreshRecycleList ? null : 'true'"
         @click="equipmentStore.manuallyRefreshRecycleList()"
       >
-        刷新待选汉字（-1回收点）
+        刷新待选汉字（-1回收进度）
       </button>
     </div>
   </div>
@@ -61,6 +62,7 @@ const startDragChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
   width: 100%;
   height: 200px;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   border: solid 1px darkgray;
@@ -82,5 +84,9 @@ const startDragChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
   display: flex;
   justify-content: center;
   padding: 10px;
+}
+
+.recycle-zone-desc {
+  color: grey;
 }
 </style>

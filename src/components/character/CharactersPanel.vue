@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { useEquipmentStore } from "@/stores/equipment-system";
+import { useEquipmentStore } from "@/stores/equipment";
 import CharacterSlot from "@/components/character/CharacterSlot.vue";
+import { useGameCoreStore } from "@/stores/game-core";
 
+const gameCoreStore = useGameCoreStore();
 const equipmentStore = useEquipmentStore();
 
 const startDragChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
@@ -18,12 +20,13 @@ const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
 <template>
   <div id="char-list">
     Equipment gain gauge
-    {{ `${equipmentStore.charGainPoint} / ${equipmentStore.currentCharGainGaugeMax}` }}
-    <button @click="equipmentStore.getNewChar()">Add</button>
+    <span>level: {{ gameCoreStore.level }}</span>
+    <span> xp gauge: {{ `${gameCoreStore.xpGauge} / ${gameCoreStore.xpGaugeMax}` }}</span>
+    <button @click="equipmentStore.addRandomNewChar()">Add</button>
     <div id="char-gain-gauge-container">
       <div
         id="char-gain-gauge-value"
-        :style="{ width: `${equipmentStore.charGainPoint / equipmentStore.currentCharGainGaugeMax * 100}%` }"
+        :style="{ width: `${ gameCoreStore.xpGauge / gameCoreStore.xpGaugeMax * 100 }%` }"
       />
     </div>
     Equipment temporary storage area
@@ -41,7 +44,7 @@ const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
     </div>
     Equipment area
     <div id="char-container">
-      <template v-for="(row, rowIndex) in equipmentStore.charList" :key="rowIndex">
+      <template v-for="(row, rowIndex) in equipmentStore.charSlotList" :key="rowIndex">
         <div
           v-for="(charSlotData, colIndex) in row"
           :key="colIndex"

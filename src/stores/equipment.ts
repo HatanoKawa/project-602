@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import { matchBeginCharSet, wholeCharList } from "@/db/db-helper";
 import { tryParse } from "@/utils/parser";
 import type { Equipment, EquipmentDirection } from "@/types/equipment-types";
+import { useGameCoreStore } from "@/stores/game-core";
 
 export interface CharSlotData {
   char: string;
@@ -11,65 +12,53 @@ export interface CharSlotData {
   nextTo: string[];
 }
 
-export const useEquipmentStore = defineStore('equipment-system', () => {
+export const useEquipmentStore = defineStore('equipment', () => {
+
+  const gameCoreStore = useGameCoreStore();
 
   // region 汉字获取与交换相关逻辑
-  
-  const CHAR_GAIN_GAUGE_MAX = 100;
 
   // [rowIndex, colIndex]
   const currentOperatingCharIndex = ref([-1, -1]);
-  const level = ref(1);
-  const currentCharGainGaugeMax = computed(() => {
-    return level.value * CHAR_GAIN_GAUGE_MAX;
-  });
-  const charGainPoint = ref(0);
-
-  // temporary storage for equipment, length is 10, rowIndex is -1
   const charTempStorage = ref<string[]>([]);
+  const canAddNewChar = computed(() => charTempStorage.value.some(char => !char));
   // whole 10x10 equipment map
-  const charList = ref<CharSlotData[][]>([]);
-  
-  const getNewChar = () => {
-    for (let i = 0; i < charTempStorage.value.length; i++) {
-      if (!charTempStorage.value[i]) {
-        charTempStorage.value[i] = wholeCharList[Math.floor(Math.random() * wholeCharList.length)];
-        return;
-      }
-    }
-  };
+  const charSlotList = ref<CharSlotData[][]>([]);
 
   const exchangeChar = (fromX: number, fromY: number, toX: number, toY: number) => {
     if (fromX < 0) {
       // exchange from temporary storage
-      if (charList.value[toX][toY].char) {
+      if (charSlotList.value[toX][toY].char) {
         console.warn('target slot is not empty');
         return;
       }
       if (fromX === -1) {
-        charList.value[toX][toY].char = charTempStorage.value.splice(fromY, 1, '')[0];
+        charSlotList.value[toX][toY].char = charTempStorage.value.splice(fromY, 1, '')[0];
+        gameCoreStore.tryLevelUp();
       }
       if (fromX === -2) {
-        charList.value[toX][toY].char = recycleCharTempStorage.value[fromY];
+        charSlotList.value[toX][toY].char = recycleCharTempStorage.value[fromY];
         recycleGauge.value -= RECYCLE_CHAR_MAX;
         refreshRecycleCharTempStorage();
       }
     } else {
       // exchange from equipment list
-      const fromChar = charList.value[fromX][fromY].char;
-      const toChar = charList.value[toX][toY].char;
-      charList.value[fromX][fromY].char = toChar;
-      charList.value[toX][toY].char = fromChar;
+      const fromChar = charSlotList.value[fromX][fromY].char;
+      const toChar = charSlotList.value[toX][toY].char;
+      charSlotList.value[fromX][fromY].char = toChar;
+      charSlotList.value[toX][toY].char = fromChar;
     }
 
     regenerateEquipments(([[fromX, fromY], [toX, toY]].filter(pos => pos[0] >= 0)) as [number, number][]);
     // generateEquipments();
   };
 
-  const addCharGainPoint = (val: number) => {
-    charGainPoint.value += val;
-    while (charGainPoint.value >= currentCharGainGaugeMax.value) {
-      levelUp();
+  const addRandomNewChar = () => {
+    for (let i = 0; i < charTempStorage.value.length; i++) {
+      if (!charTempStorage.value[i]) {
+        charTempStorage.value[i] = wholeCharList[Math.floor(Math.random() * wholeCharList.length)];
+        return;
+      }
     }
   };
   
@@ -104,7 +93,7 @@ export const useEquipmentStore = defineStore('equipment-system', () => {
   const recycleChar = (fromX: number, fromY: number) => {
     if (fromX >= 0) {
       // recycle from char list
-      charList.value[fromX][fromY].char = '';
+      charSlotList.value[fromX][fromY].char = '';
       regenerateEquipments([[fromX, fromY]]);
     } else if (fromX === -1) {
       // recycle from char gain temporary storage
@@ -127,12 +116,12 @@ export const useEquipmentStore = defineStore('equipment-system', () => {
   // 返回值为 [左, 右, 上, 下] 四个方向的可能装备字符串，尽可能匹配最长的装备名称，遇到【边缘】或【空格】或【其他的装备起始字符】则停止
   const collectPossibleWords = (rowIndex: number, colIndex: number): [string, string, string, string] => {
     // find to left
-    const startChar = charList.value[rowIndex][colIndex].char;
+    const startChar = charSlotList.value[rowIndex][colIndex].char;
 
     const findWords = (rowIndex: number, colIndex: number, dRowIndex: number, dColIndex: number): string => {
       let words = startChar;
       while (rowIndex >= 0 && rowIndex < 10 && colIndex >= 0 && colIndex < 10) {
-        const nextChar = charList.value[rowIndex][colIndex].char;
+        const nextChar = charSlotList.value[rowIndex][colIndex].char;
         if (matchBeginCharSet.has(nextChar) || nextChar === '') break;
         words = nextChar + words;
         rowIndex += dRowIndex;
@@ -188,13 +177,13 @@ export const useEquipmentStore = defineStore('equipment-system', () => {
     // 收集所有需要删除的装备 ID
     const equipmentIdToRemove: Set<string> = new Set<string>();
     relatedPos.forEach(pos => {
-      const charSlot = charList.value[pos[0]][pos[1]];
+      const charSlot = charSlotList.value[pos[0]][pos[1]];
       charSlot.belongTo.forEach(equipmentId => equipmentIdToRemove.add(equipmentId));
     });
     console.log('remove equipments: ', equipmentIdToRemove);
 
     // 遍历所有字符格，删除所有与本次移动相关的装备 ID
-    charList.value.forEach(row => {
+    charSlotList.value.forEach(row => {
       row.forEach(charSlot => {
         for(let i = charSlot.nextTo.length - 1; i >= 0; i--) {
           if (equipmentIdToRemove.has(charSlot.nextTo[i]))
@@ -248,7 +237,7 @@ export const useEquipmentStore = defineStore('equipment-system', () => {
     const tempEquipmentList: Equipment[] = [];
     for (let rowIndex = 0; rowIndex < 10; rowIndex++) {
       for (let colIndex = 0; colIndex < 10; colIndex++) {
-        if (matchBeginCharSet.has(charList.value[rowIndex][colIndex].char)) {
+        if (matchBeginCharSet.has(charSlotList.value[rowIndex][colIndex].char)) {
           // 当前位置是装备的起始位置
           // todo 由于Item与Armor的parser还未完成，所以返回值可能为空数组，需要过滤掉
           // tempEquipmentList.push(...tryFindEquipments(rowIndex, colIndex));
@@ -267,17 +256,17 @@ export const useEquipmentStore = defineStore('equipment-system', () => {
       case "r":
         // 如果是左右方向匹配，则当前位置的上下两个位置相邻于此装备
         if (curPos[0] - 1 >= 0)
-          charList.value[curPos[0] - 1][curPos[1]].nextTo.push(equipmentId);
+          charSlotList.value[curPos[0] - 1][curPos[1]].nextTo.push(equipmentId);
         if (curPos[0] + 1 < 10)
-          charList.value[curPos[0] + 1][curPos[1]].nextTo.push(equipmentId);
+          charSlotList.value[curPos[0] + 1][curPos[1]].nextTo.push(equipmentId);
         break;
       case "t":
       case "b":
         // 如果是上下方向匹配，则当前位置的左右两个位置相邻于此装备
         if (curPos[1] - 1 >= 0)
-          charList.value[curPos[0]][curPos[1] - 1].nextTo.push(equipmentId);
+          charSlotList.value[curPos[0]][curPos[1] - 1].nextTo.push(equipmentId);
         if (curPos[1] + 1 < 10)
-          charList.value[curPos[0]][curPos[1] + 1].nextTo.push(equipmentId);
+          charSlotList.value[curPos[0]][curPos[1] + 1].nextTo.push(equipmentId);
         break;
     }
   };
@@ -295,7 +284,7 @@ export const useEquipmentStore = defineStore('equipment-system', () => {
       case "b": posBefore[0]--; break;
     }
     if (posBefore[0] >= 0 && posBefore[0] < 10 && posBefore[1] >= 0 && posBefore[1] < 10) {
-      charList.value[posBefore[0]][posBefore[1]].nextTo.push(equipmentId);
+      charSlotList.value[posBefore[0]][posBefore[1]].nextTo.push(equipmentId);
     }
     // endregion
 
@@ -304,11 +293,11 @@ export const useEquipmentStore = defineStore('equipment-system', () => {
       if (lastCount === 0) {
         // 已经匹配结束，则当前位置若合法便相邻于此装备
         if (curPos[0] >= 0 && curPos[0] < 10 && curPos[1] >= 0 && curPos[1] < 10) {
-          charList.value[curPos[0]][curPos[1]].nextTo.push(equipmentId);
+          charSlotList.value[curPos[0]][curPos[1]].nextTo.push(equipmentId);
         }
       } else {
         // 未匹配结束，则当前位置属于此装备
-        charList.value[curPos[0]][curPos[1]].belongTo.push(equipmentId);
+        charSlotList.value[curPos[0]][curPos[1]].belongTo.push(equipmentId);
         // 设置两侧相邻
         setNextTo(curPos, direction, equipmentId);
       }
@@ -337,28 +326,44 @@ export const useEquipmentStore = defineStore('equipment-system', () => {
   
   // endregion
 
-  const levelUp = () => {
-    charGainPoint.value -= currentCharGainGaugeMax.value;
-    level.value++;
-    getNewChar();
+  // region 主动装备行动逻辑
+
+  const effectiveGaugeIncreaseFunctionDict: Record<symbol, (val: number) => void> = {};
+  const increaseAllEffectiveGauge = (increaseValue: number) => {
+    Object.getOwnPropertySymbols(effectiveGaugeIncreaseFunctionDict).forEach((key) => {
+      effectiveGaugeIncreaseFunctionDict[key](increaseValue);
+    });
   };
 
-  const resetPlayerState = () => {
-    level.value = 1;
-    charGainPoint.value = 0;
-    charTempStorage.value = Array.from({ length: 10 }, () => "");
-    charList.value = Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => ({ char: '', nextTo: [], belongTo: [] })));
+  const addEffectiveGauge = (effectiveGauge: (val: number) => void) => {
+    const key = Symbol();
+    effectiveGaugeIncreaseFunctionDict[key] = effectiveGauge;
+    return key;
   };
-  resetPlayerState();
+
+  const removeEffectiveGauge = (key: symbol) => {
+    console.log('removeEffectiveGauge', key);
+    delete effectiveGaugeIncreaseFunctionDict[key];
+  };
+
+  // endregion
+
+  const init = () => {
+    charTempStorage.value = Array.from({ length: 10 }, () => "");
+    charSlotList.value = Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => ({ char: '', nextTo: [], belongTo: [] })));
+  };
+  init();
+  
+  const gameFlushHandler = (increaseValue: number) => {
+    increaseAllEffectiveGauge(increaseValue);
+  };
 
   return {
     RECYCLE_CHAR_MAX,
 
-    level,
-    currentCharGainGaugeMax,
-    charGainPoint,
+    canAddNewChar,
     charTempStorage,
-    charList,
+    charSlotList,
     currentOperatingCharIndex,
     equipmentList,
     currentHighlightEquipmentId,
@@ -367,14 +372,19 @@ export const useEquipmentStore = defineStore('equipment-system', () => {
     canRefreshRecycleList,
     recycleCharTempStorage,
 
-    resetPlayerState,
-    getNewChar,
-    levelUp,
-    addCharGainPoint,
+    addRandomNewChar,
     exchangeChar,
     highlightEquipment,
     unHighlightEquipment,
     recycleChar,
     manuallyRefreshRecycleList,
+
+    // region 主动装备行动逻辑
+    addEffectiveGauge,
+    increaseAllEffectiveGauge,
+    removeEffectiveGauge,
+    // endregion
+
+    gameFlushHandler,
   };
 });
