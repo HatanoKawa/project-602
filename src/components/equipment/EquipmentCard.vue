@@ -30,6 +30,7 @@ const equipmentRealTimeStatus = computed<EquipmentRealTimeData|null>(() => {
       accumulatedValue_Fire: props.equipmentDetail.tableData.accumulatedValue_Fire,
       accumulatedValue_Ice: props.equipmentDetail.tableData.accumulatedValue_Ice,
       accumulatedValue_Bleeding: props.equipmentDetail.tableData.accumulatedValue_Bleeding,
+      weapon: props.equipmentDetail,
     } as WeaponRealTimeData;
     props.equipmentDetail.modifiers.forEach((modifier) => {
       realTimeStatus = modifier.tableData.modifier(realTimeStatus!);

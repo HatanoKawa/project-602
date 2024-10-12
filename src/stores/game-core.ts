@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import { useEquipmentStore } from "@/stores/equipment";
 import { useEnemyStore } from "@/stores/enemy";
+import { useLogStore } from "@/stores/log";
 
 export const useGameCoreStore = defineStore('game-core', () => {
 
@@ -28,21 +29,16 @@ export const useGameCoreStore = defineStore('game-core', () => {
   
   
   const levelUp = () => {
-    const equipmentStore = useEquipmentStore();
-    level.value++;
     xpGauge.value -= xpGaugeMax.value;
+    level.value++;
 
-    equipmentStore.addRandomNewChar();
+    const equipmentStore = useEquipmentStore();
+    equipmentStore.tryAddRandomNewChar();
   };
   
   const tryLevelUp = () => {
-    const equipmentStore = useEquipmentStore();
     while (xpGauge.value >= xpGaugeMax.value) {
-      if (equipmentStore.canAddNewChar) {
-        levelUp();
-      } else {
-        return;
-      }
+      levelUp();
     }
   };
 
@@ -57,6 +53,9 @@ export const useGameCoreStore = defineStore('game-core', () => {
 
     const enemyStore = useEnemyStore();
     enemyStore.gameFlushHandler(increaseTimePerFlush.value);
+
+    const logStore = useLogStore();
+    logStore.gameFlushHandler(increaseTimePerFlush.value);
   };
 
   let gameRunningInterval: any;
@@ -73,6 +72,9 @@ export const useGameCoreStore = defineStore('game-core', () => {
   };
   
   const startGame = () => {
+    const logStore = useLogStore();
+    logStore.addGameStateChangeLog('游戏开始');
+
     if (!gameRunningInterval) {
       gameRunningInterval = setInterval(gameStatusFlush, GAME_FLUSH_INTERVAL);
     }

@@ -97,6 +97,7 @@ export interface WeaponRealTimeData {
   accumulatedValue_Fire: number;
   accumulatedValue_Ice: number;
   accumulatedValue_Bleeding: number;
+  weapon: Equipment_Weapon;
 }
 
 export interface ItemRealTimeData {

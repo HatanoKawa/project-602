@@ -3,7 +3,7 @@ import { EquipmentAttackType, type WeaponTableData } from "@/types/db-types";
 export const tableData_Weapon: WeaponTableData[] = [
   {
     name: ['刀', '剑'],
-    power: 100,
+    power: 50,
     effectiveInterval: 500,
     attackType: EquipmentAttackType.sword,
     description: '只是普通的刀',
@@ -14,7 +14,7 @@ export const tableData_Weapon: WeaponTableData[] = [
   },
   {
     name: '偃月刀',
-    power: 150,
+    power: 100,
     effectiveInterval: 400,
     attackType: EquipmentAttackType.sword,
     description: '偃月刀',
@@ -25,7 +25,7 @@ export const tableData_Weapon: WeaponTableData[] = [
   },
   {
     name: '青龙偃月刀',
-    power: 300,
+    power: 150,
     effectiveInterval: 300,
     attackType: EquipmentAttackType.sword,
     description: '大名鼎鼎的青龙偃月刀',
@@ -37,28 +37,28 @@ export const tableData_Weapon: WeaponTableData[] = [
   {
     name: '妖刀',
     power: 10,
-    effectiveInterval: 100,
+    effectiveInterval: 150,
     attackType: EquipmentAttackType.sword,
     description: '妖刀',
     lifeSteal: 50,
     accumulatedValue_Fire: 0,
     accumulatedValue_Ice: 0,
-    accumulatedValue_Bleeding: 50,
+    accumulatedValue_Bleeding: 30,
   },
   {
     name: '村正妖刀',
     power: 20,
-    effectiveInterval: 100,
+    effectiveInterval: 120,
     attackType: EquipmentAttackType.sword,
     description: '大名鼎鼎的村正妖刀',
     lifeSteal: 200,
     accumulatedValue_Fire: 0,
     accumulatedValue_Ice: 0,
-    accumulatedValue_Bleeding: 100,
+    accumulatedValue_Bleeding: 50,
   },
   {
     name: '棍',
-    power: 50,
+    power: 20,
     effectiveInterval: 1000,
     attackType: EquipmentAttackType.stick,
     description: '只是普通的棍',
@@ -69,7 +69,7 @@ export const tableData_Weapon: WeaponTableData[] = [
   },
   {
     name: '弓',
-    power: 150,
+    power: 40,
     effectiveInterval: 800,
     attackType: EquipmentAttackType.bow,
     description: '只是普通的弓',
@@ -80,7 +80,7 @@ export const tableData_Weapon: WeaponTableData[] = [
   },
   {
     name: '矛',
-    power: 70,
+    power: 50,
     effectiveInterval: 600,
     attackType: EquipmentAttackType.spear,
     description: '只是普通的矛',
@@ -113,15 +113,15 @@ export const tableData_Weapon: WeaponTableData[] = [
   },
   {
     name: '斧',
-    power: 100,
+    power: 30,
     effectiveInterval: 800,
     attackType: EquipmentAttackType.axe,
     description: '只是普通的斧',
     lifeSteal: 0,
     accumulatedValue_Fire: 0,
     accumulatedValue_Ice: 0,
-    accumulatedValue_Bleeding: 0,
+    accumulatedValue_Bleeding: 10,
   },
-]
+];
 
 export default tableData_Weapon;

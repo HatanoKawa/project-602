@@ -3,6 +3,7 @@ import CharactersPanel from "@/components/character/CharactersPanel.vue";
 import EquipmentsPanel from "@/components/equipment/EquipmentsPanel.vue";
 import CharacterRecyclePanel from "@/components/character/CharacterRecyclePanel.vue";
 import EnemyPanel from "@/components/enemy/EnemyPanel.vue";
+import LogsPanel from "@/components/log/LogsPanel.vue";
 </script>
 
 <template>
@@ -13,9 +14,7 @@ import EnemyPanel from "@/components/enemy/EnemyPanel.vue";
         <div id="avatar" class="base-frame" style="width: 200px;">
           QUINN RIVER
         </div>
-        <div id="status-panel" class="base-frame" style="flex: 1;">
-          status here
-        </div>
+        <LogsPanel />
       </div>
     </div>
     <div style="display: flex; flex-direction: column;">

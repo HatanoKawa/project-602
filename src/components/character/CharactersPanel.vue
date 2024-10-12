@@ -2,6 +2,7 @@
 import { useEquipmentStore } from "@/stores/equipment";
 import CharacterSlot from "@/components/character/CharacterSlot.vue";
 import { useGameCoreStore } from "@/stores/game-core";
+import { computed } from "vue";
 
 const gameCoreStore = useGameCoreStore();
 const equipmentStore = useEquipmentStore();
@@ -15,6 +16,10 @@ const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
   e.preventDefault();
   equipmentStore.exchangeChar(equipmentStore.currentOperatingCharIndex[0], equipmentStore.currentOperatingCharIndex[1], rowIndex, colIndex);
 };
+
+const xpGauge = computed(() => gameCoreStore.xpGauge);
+const xpGaugeMax = computed(() => gameCoreStore.xpGaugeMax);
+const xpGaugeRate = computed(() => xpGauge.value / xpGaugeMax.value * 100);
 </script>
 
 <template>
@@ -28,13 +33,16 @@ const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
       <span>升级进度: </span>
       <span>{{ `${gameCoreStore.xpGauge} / ${gameCoreStore.xpGaugeMax}` }}</span>
     </div>
-    <div id="char-gain-gauge-container">
+    <div id="xp-gauge-container">
       <div
-        id="char-gain-gauge-value"
-        :style="{ width: `${ gameCoreStore.xpGauge / gameCoreStore.xpGaugeMax * 100 }%` }"
+        id="xp-gauge-bar"
+        :style="{ width: `${ Math.min(xpGaugeRate, 100) }%` }"
       />
     </div>
-    Equipment temporary storage area
+    <div>
+      汉字临时存储区
+      <span v-show="equipmentStore.newCharToAddCount > 0">(+{{ equipmentStore.newCharToAddCount }})</span>
+    </div>
     <div id="char-temporary-storage-area">
       <div
         class="char-cell"
@@ -69,7 +77,7 @@ const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
 
 <style scoped>
 #char-list {
-  height: 640px;
+  height: 740px;
   padding: 4px;
   border: solid 1px darkgray;
 }
@@ -106,12 +114,12 @@ const dropChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
   background-color: white;
 }
 
-#char-gain-gauge-container {
+#xp-gauge-container {
   border: solid 1px grey;
   height: 16px;
 }
 
-#char-gain-gauge-value {
+#xp-gauge-bar {
   background-color: green;
   height: 100%;
   transition: width .2s;

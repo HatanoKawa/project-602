@@ -5,6 +5,7 @@ import type { EnemyRealTimeData } from "@/types/enemy-types";
 import { tableData_Enemy } from "@/db";
 import type { WeaponRealTimeData } from "@/types/equipment-types";
 import { EquipmentAttackType } from "@/types/db-types";
+import { useLogStore } from "@/stores/log";
 
 export interface MapSlotData {
   enemy: EnemyRealTimeData | null;
@@ -13,14 +14,22 @@ export interface MapSlotData {
 export const useEnemyStore = defineStore('enemy', () => {
 
   const gameCoreStore = useGameCoreStore();
-  const currentEnemyStateMultipliers = computed(() => 1 + Math.pow(gameCoreStore.level * 0.1, 2));
+  const logStore = useLogStore();
+
+  const currentEnemyStateMultipliers = computed(() => 1 + Math.pow((gameCoreStore.level - 1) * 0.1, 2));
   const currentEnemyRank = computed(() => Math.floor(gameCoreStore.level / 10));
   const currentPossibleEnemyList = computed(() => {
-    return tableData_Enemy.filter(enemy => enemy.rank === currentEnemyRank.value);
+    return tableData_Enemy.filter(enemy => enemy.rank <= currentEnemyRank.value);
   });
 
-  // 地图格子列表，用于敌人生成，格子的尺寸为 5行x4列
+  // 地图格子列表，用于敌人生成，格子的尺寸为 4行x5列
+  const ROW_COUNT = 4;
+  const COL_COUNT = 5;
   const mapSlotList = ref<MapSlotData[][]>([]);
+  const checkValidRow = (rowIndex: number) => rowIndex >= 0 && rowIndex < ROW_COUNT;
+  const checkValidCol = (colIndex: number) => colIndex >= 0 && colIndex < COL_COUNT;
+  const checkValidPosition = (position: [number, number]) => checkValidRow(position[0]) && checkValidCol(position[1]);
+  
   const canAddEnemy = computed(() => mapSlotList.value.some(row => row.some(slot => !slot.enemy)));
   const mapIsEmpty = computed(() => !mapSlotList.value.some(row => row.some(slot => slot.enemy)));
   const ENEMY_GENERATE_INTERVAL = 1000;
@@ -28,12 +37,13 @@ export const useEnemyStore = defineStore('enemy', () => {
 
   const generateNewEnemyRealTimeData = () => {
     const randomEnemyTableData = currentPossibleEnemyList.value[Math.floor(Math.random() * currentPossibleEnemyList.value.length)];
+
     return {
       health: randomEnemyTableData.healthMax * currentEnemyStateMultipliers.value,
       healthMax: randomEnemyTableData.healthMax * currentEnemyStateMultipliers.value,
-      elementalGauge_Fire: randomEnemyTableData.elementalGaugeMax_Fire,
-      elementalGauge_Ice: randomEnemyTableData.elementalGaugeMax_Ice,
-      elementalGauge_Bleeding: randomEnemyTableData.elementalGaugeMax_Bleeding,
+      elementalGauge_Fire: 0,
+      elementalGauge_Ice: 0,
+      elementalGauge_Bleeding: 0,
       tableData: randomEnemyTableData,
     } as EnemyRealTimeData;
   };
@@ -123,7 +133,7 @@ export const useEnemyStore = defineStore('enemy', () => {
     positionList.forEach(([rowIndex, colIndex]) => {
       for (let i = rowIndex - 1; i <= rowIndex + 1; i++) {
         for (let j = colIndex - 1; j <= colIndex + 1; j++) {
-          if (i >= 0 && i < 5 && j >= 0 && j < 4) {
+          if (checkValidPosition([i, j])) {
             result.push([i, j]);
           }
         }
@@ -131,18 +141,18 @@ export const useEnemyStore = defineStore('enemy', () => {
     });
     return result;
   };
-
+  
   // 将伤害范围向4个方向扩展1格
   const expandAttackRange_Cross = (positionList: [number, number][]) => {
     const result: [number, number][] = [];
     positionList.forEach(([rowIndex, colIndex]) => {
       for (let i = rowIndex - 1; i <= rowIndex + 1; i++) {
-        if (i >= 0 && i < 5) {
+        if (checkValidRow(i)) {
           result.push([i, colIndex]);
         }
       }
       for (let j = colIndex - 1; j <= colIndex + 1; j++) {
-        if (j >= 0 && j < 4) {
+        if (checkValidCol(j) && j !== colIndex) {
           result.push([rowIndex, j]);
         }
       }
@@ -179,6 +189,14 @@ export const useEnemyStore = defineStore('enemy', () => {
         settleEnemyState(position);
       }
     });
+    
+    logStore.addElementalEffectLog(
+      '点燃',
+      'orange',
+      crossPositionList.map(([rowIndex, colIndex]) =>
+        `[${rowIndex},${colIndex}] ${mapSlotList.value[rowIndex][colIndex].enemy!.tableData.name}`),
+      crossPositionList.reduce((acc, [rowIndex, colIndex]) => acc + mapSlotList.value[rowIndex][colIndex].enemy!.healthMax * 0.1, 0)
+    );
   };
 
   // 结算敌人状态
@@ -192,21 +210,47 @@ export const useEnemyStore = defineStore('enemy', () => {
         return;
       }
       while (enemyRealTimeData.elementalGauge_Ice >= enemyRealTimeData.tableData.elementalGaugeMax_Ice) {
-        enemyRealTimeData.health -= 100;
+        const randomDamage = Math.floor(Math.random() * enemyRealTimeData.health);
+        enemyRealTimeData.health -= randomDamage;
         enemyRealTimeData.elementalGauge_Ice = 0;
+        logStore.addElementalEffectLog(
+          '冰冻',
+          'blue',
+          [`[${enemyPosition[0]},${enemyPosition[1]}] ${mapSlotList.value[enemyPosition[0]][enemyPosition[1]].enemy!.tableData.name}`],
+          randomDamage
+        );
       }
       while (enemyRealTimeData.elementalGauge_Bleeding >= enemyRealTimeData.tableData.elementalGaugeMax_Bleeding) {
-        enemyRealTimeData.health *= 0.5;
+        enemyRealTimeData.health *= 0.8;
         enemyRealTimeData.elementalGauge_Bleeding = 0;
+        logStore.addElementalEffectLog(
+          '流血',
+          'red',
+          [`[${enemyPosition[0]},${enemyPosition[1]}] ${mapSlotList.value[enemyPosition[0]][enemyPosition[1]].enemy!.tableData.name}`],
+          enemyRealTimeData.healthMax * 0.2
+        );
       }
       if (enemyRealTimeData.health <= 0) {
         gameCoreStore.addXP(enemyRealTimeData.tableData.xpReward);
+        logStore.addEnemyDieLog(`[${enemyPosition[0]},${enemyPosition[1]}] ${mapSlotList.value[enemyPosition[0]][enemyPosition[1]].enemy!.tableData.name}`);
         removeEnemyAtPosition(enemyPosition);
       }
     }
   };
   
   const attackEnemyAtPosition = (positionList: [number, number][], weapon: WeaponRealTimeData) => {
+    console.log('attackEnemyAtPosition', positionList, weapon);
+    logStore.addEquipmentAttackLog(
+      weapon.weapon.id,
+      weapon.weapon.fullName,
+      positionList.map(([rowIndex, colIndex]) =>
+        mapSlotList.value[rowIndex][colIndex].enemy
+          ? `[${rowIndex},${colIndex}] ${mapSlotList.value[rowIndex][colIndex].enemy!.tableData.name}`
+          : ''
+      ).filter(str => str !== ''),
+      weapon.power
+    );
+
     positionList.forEach(([rowIndex, colIndex]) => {
       const enemyRealTimeData = mapSlotList.value[rowIndex][colIndex].enemy;
       if (enemyRealTimeData) {
@@ -226,10 +270,10 @@ export const useEnemyStore = defineStore('enemy', () => {
   
   const init = () => {
     mapSlotList.value = Array.from(
-      { length: 5 },
+      { length: ROW_COUNT },
       () =>
         Array.from(
-          { length: 4 },
+          { length: COL_COUNT },
           () => ({
             enemy: null,
           } as MapSlotData)

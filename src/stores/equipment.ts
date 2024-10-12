@@ -21,6 +21,7 @@ export const useEquipmentStore = defineStore('equipment', () => {
   // [rowIndex, colIndex]
   const currentOperatingCharIndex = ref([-1, -1]);
   const charTempStorage = ref<string[]>([]);
+  const newCharToAddCount = ref(0);
   const canAddNewChar = computed(() => charTempStorage.value.some(char => !char));
   // whole 10x10 equipment map
   const charSlotList = ref<CharSlotData[][]>([]);
@@ -35,6 +36,7 @@ export const useEquipmentStore = defineStore('equipment', () => {
       if (fromX === -1) {
         charSlotList.value[toX][toY].char = charTempStorage.value.splice(fromY, 1, '')[0];
         gameCoreStore.tryLevelUp();
+        addRandomNewChar();
       }
       if (fromX === -2) {
         charSlotList.value[toX][toY].char = recycleCharTempStorage.value[fromY];
@@ -54,12 +56,24 @@ export const useEquipmentStore = defineStore('equipment', () => {
   };
 
   const addRandomNewChar = () => {
-    for (let i = 0; i < charTempStorage.value.length; i++) {
-      if (!charTempStorage.value[i]) {
-        charTempStorage.value[i] = wholeCharList[Math.floor(Math.random() * wholeCharList.length)];
+    while (newCharToAddCount.value > 0) {
+      if (canAddNewChar.value) {
+        for (let i = 0; i < charTempStorage.value.length; i++) {
+          if (!charTempStorage.value[i]) {
+            charTempStorage.value[i] = wholeCharList[Math.floor(Math.random() * wholeCharList.length)];
+            break;
+          }
+        }
+        newCharToAddCount.value--;
+      } else {
         return;
       }
     }
+  };
+  
+  const tryAddRandomNewChar = () => {
+    newCharToAddCount.value++;
+    addRandomNewChar();
   };
   
   // endregion
@@ -252,22 +266,22 @@ export const useEquipmentStore = defineStore('equipment', () => {
   // 根据目标位置、方向、装备 ID，设置装备两侧的相邻关系
   const setNextTo = (curPos: [number, number], direction: EquipmentDirection, equipmentId: string) => {
     switch (direction) {
-      case "l":
-      case "r":
-        // 如果是左右方向匹配，则当前位置的上下两个位置相邻于此装备
-        if (curPos[0] - 1 >= 0)
-          charSlotList.value[curPos[0] - 1][curPos[1]].nextTo.push(equipmentId);
-        if (curPos[0] + 1 < 10)
-          charSlotList.value[curPos[0] + 1][curPos[1]].nextTo.push(equipmentId);
-        break;
-      case "t":
-      case "b":
-        // 如果是上下方向匹配，则当前位置的左右两个位置相邻于此装备
-        if (curPos[1] - 1 >= 0)
-          charSlotList.value[curPos[0]][curPos[1] - 1].nextTo.push(equipmentId);
-        if (curPos[1] + 1 < 10)
-          charSlotList.value[curPos[0]][curPos[1] + 1].nextTo.push(equipmentId);
-        break;
+    case "l":
+    case "r":
+      // 如果是左右方向匹配，则当前位置的上下两个位置相邻于此装备
+      if (curPos[0] - 1 >= 0)
+        charSlotList.value[curPos[0] - 1][curPos[1]].nextTo.push(equipmentId);
+      if (curPos[0] + 1 < 10)
+        charSlotList.value[curPos[0] + 1][curPos[1]].nextTo.push(equipmentId);
+      break;
+    case "t":
+    case "b":
+      // 如果是上下方向匹配，则当前位置的左右两个位置相邻于此装备
+      if (curPos[1] - 1 >= 0)
+        charSlotList.value[curPos[0]][curPos[1] - 1].nextTo.push(equipmentId);
+      if (curPos[1] + 1 < 10)
+        charSlotList.value[curPos[0]][curPos[1] + 1].nextTo.push(equipmentId);
+      break;
     }
   };
 
@@ -278,10 +292,10 @@ export const useEquipmentStore = defineStore('equipment', () => {
     // region 反推出前一个位置，若前一个位置存在，则前一个位置相邻于此装备
     const posBefore: [number, number] = [rowIndex, colIndex];
     switch (direction) {
-      case "l": posBefore[1]++; break;
-      case "r": posBefore[1]--; break;
-      case "t": posBefore[0]++; break;
-      case "b": posBefore[0]--; break;
+    case "l": posBefore[1]++; break;
+    case "r": posBefore[1]--; break;
+    case "t": posBefore[0]++; break;
+    case "b": posBefore[0]--; break;
     }
     if (posBefore[0] >= 0 && posBefore[0] < 10 && posBefore[1] >= 0 && posBefore[1] < 10) {
       charSlotList.value[posBefore[0]][posBefore[1]].nextTo.push(equipmentId);
@@ -303,10 +317,10 @@ export const useEquipmentStore = defineStore('equipment', () => {
       }
       // 根据方向，推进到下一个位置
       switch (direction) {
-        case 'l': curPos[1]--; break;
-        case 'r': curPos[1]++; break;
-        case 't': curPos[0]--; break;
-        case 'b': curPos[0]++; break;
+      case 'l': curPos[1]--; break;
+      case 'r': curPos[1]++; break;
+      case 't': curPos[0]--; break;
+      case 'b': curPos[0]++; break;
       }
       lastCount--;
     }
@@ -351,6 +365,9 @@ export const useEquipmentStore = defineStore('equipment', () => {
   const init = () => {
     charTempStorage.value = Array.from({ length: 10 }, () => "");
     charSlotList.value = Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => ({ char: '', nextTo: [], belongTo: [] })));
+
+    newCharToAddCount.value = 10;
+    addRandomNewChar();
   };
   init();
   
@@ -362,6 +379,7 @@ export const useEquipmentStore = defineStore('equipment', () => {
     RECYCLE_CHAR_MAX,
 
     canAddNewChar,
+    newCharToAddCount,
     charTempStorage,
     charSlotList,
     currentOperatingCharIndex,
@@ -373,6 +391,7 @@ export const useEquipmentStore = defineStore('equipment', () => {
     recycleCharTempStorage,
 
     addRandomNewChar,
+    tryAddRandomNewChar,
     exchangeChar,
     highlightEquipment,
     unHighlightEquipment,
