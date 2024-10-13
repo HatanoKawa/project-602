@@ -13,13 +13,20 @@ const isHighlight = computed(() => {
   return props.slotData.belongTo.some(id => equipmentStore.currentHighlightEquipmentId === id);
 });
 
-const isBelongToEquipment = computed(() => {
-  return props.slotData.belongTo.length > 0;
+const backgroundColorDepth = computed(() => {
+  return Math.min(props.slotData.belongTo.length, 5);
+});
+
+const backgroundColor = computed(() => {
+  if (isHighlight.value) {
+    return '#7695b2';
+  }
+  return `rgba(0, 0, 0, ${backgroundColorDepth.value * 0.1})`;
 });
 </script>
 
 <template>
-  <div class="char-slot" :class="{ 'belong-to-equipment': isBelongToEquipment, highlight: isHighlight }">
+  <div class="char-slot" :style="{ backgroundColor: backgroundColor }">
     {{ slotData.char || '-' }}
   </div>
 </template>
@@ -31,13 +38,5 @@ const isBelongToEquipment = computed(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.belong-to-equipment {
-  background-color: #ddd;
-}
-
-.highlight {
-  background-color: #7695b2;
 }
 </style>

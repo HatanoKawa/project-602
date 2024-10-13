@@ -4,7 +4,6 @@ import { useEquipmentStore } from "@/stores/equipment";
 const equipmentStore = useEquipmentStore();
 const startDragChar = (e: DragEvent, rowIndex: number, colIndex: number) => {
   equipmentStore.currentOperatingCharIndex = [rowIndex, colIndex];
-  console.warn(`startDragChar: [${rowIndex}, ${colIndex}], ${e?.dataTransfer?.getData('text')}`);
 };
 </script>
 

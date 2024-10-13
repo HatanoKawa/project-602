@@ -185,6 +185,31 @@ export const useEquipmentStore = defineStore('equipment', () => {
     });
   };
 
+  // 删除指定装备 ID 相关的相邻与从属关系
+  const removeRelatedEquipments = (equipmentIds: Set<string>) => {
+    // 遍历所有字符格，删除所有与本次移动相关的装备 ID
+    charSlotList.value.forEach(row => {
+      row.forEach(charSlot => {
+        for(let i = charSlot.nextTo.length - 1; i >= 0; i--) {
+          if (equipmentIds.has(charSlot.nextTo[i]))
+            charSlot.nextTo.splice(i, 1);
+        }
+        for(let i = charSlot.belongTo.length - 1; i >= 0; i--) {
+          if (equipmentIds.has(charSlot.belongTo[i]))
+            charSlot.belongTo.splice(i, 1);
+        }
+        // charSlot.nextTo = charSlot.nextTo.filter(equipmentId => !equipmentIdToRemove.has(equipmentId));
+        // charSlot.belongTo = charSlot.belongTo.filter(equipmentId => !equipmentIdToRemove.has(equipmentId));
+      });
+    });
+    // 在装备列表中删除所有与本次移动相关的装备
+    for (let i = equipmentList.value.length - 1; i >= 0; i--) {
+      if (equipmentIds.has(equipmentList.value[i].id)) {
+        equipmentList.value.splice(i, 1);
+      }
+    }
+  };
+  
   // 重新生成装备列表
   const regenerateEquipments = (relatedPos: [number, number][]) => {
 
@@ -194,36 +219,15 @@ export const useEquipmentStore = defineStore('equipment', () => {
       const charSlot = charSlotList.value[pos[0]][pos[1]];
       charSlot.belongTo.forEach(equipmentId => equipmentIdToRemove.add(equipmentId));
     });
-    console.log('remove equipments: ', equipmentIdToRemove);
 
-    // 遍历所有字符格，删除所有与本次移动相关的装备 ID
-    charSlotList.value.forEach(row => {
-      row.forEach(charSlot => {
-        for(let i = charSlot.nextTo.length - 1; i >= 0; i--) {
-          if (equipmentIdToRemove.has(charSlot.nextTo[i]))
-            charSlot.nextTo.splice(i, 1);
-        }
-        for(let i = charSlot.belongTo.length - 1; i >= 0; i--) {
-          if (equipmentIdToRemove.has(charSlot.belongTo[i]))
-            charSlot.belongTo.splice(i, 1);
-        }
-        // charSlot.nextTo = charSlot.nextTo.filter(equipmentId => !equipmentIdToRemove.has(equipmentId));
-        // charSlot.belongTo = charSlot.belongTo.filter(equipmentId => !equipmentIdToRemove.has(equipmentId));
-      });
-    });
+    removeRelatedEquipments(equipmentIdToRemove);
 
-    // 在装备列表中删除所有与本次移动相关的装备
-    for (let i = equipmentList.value.length - 1; i >= 0; i--) {
-      if (equipmentIdToRemove.has(equipmentList.value[i].id)) {
-        equipmentList.value.splice(i, 1);
-      }
-    }
-
-    // 重新生成装备列表
+    // 生成装备列表
     generateEquipments();
   };
 
   const mergeEquipments = (targetEquipments: Equipment[]) => {
+    const equipmentsToRemove: Set<string> = new Set<string>();
     const equipmentsToAdd: Equipment[] = [...targetEquipments];
     // 移除待添加列表中重复的装备，移除系统中装备列表不应存在的装备
     for (let i = equipmentList.value.length - 1; i >= 0; i--) {
@@ -233,10 +237,14 @@ export const useEquipmentStore = defineStore('equipment', () => {
         // 如果待添加列表中存在相同的装备，则移除
         equipmentsToAdd.splice(targetIndex, 1);
       } else {
-        // 如果系统中存在的装备不在待添加列表中，则移除
+        // 如果系统中存在的装备不在待添加列表中，说明此装备已经不再存在，需要移除
+        equipmentsToRemove.add(equipmentId);
         equipmentList.value.splice(i, 1);
       }
     }
+
+    // 移除不再存在的装备的相邻与从属关系
+    removeRelatedEquipments(equipmentsToRemove);
 
     // 合并待添加列表到系统中
     equipmentsToAdd.forEach(equipment => {
@@ -356,7 +364,6 @@ export const useEquipmentStore = defineStore('equipment', () => {
   };
 
   const removeEffectiveGauge = (key: symbol) => {
-    console.log('removeEffectiveGauge', key);
     delete effectiveGaugeIncreaseFunctionDict[key];
   };
 
