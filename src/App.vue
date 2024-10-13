@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router';
-import { useGameCoreStore } from "@/stores/game-core";
-
-const gameCoreStore = useGameCoreStore();
 </script>
 
 <template>
   <h1 style="text-align: center;">Project 602</h1>
 
-  <div style="width: 100%; display: flex; justify-content: center;">
-    <RouterLink to="/">Introduction</RouterLink>
-    <RouterLink to="/game">Game</RouterLink>
-
-    <button @click="gameCoreStore.startGame()">Start Game</button>
-    <button @click="gameCoreStore.pauseGame()">Pause Game</button>
+  <div style="width: 100%; display: flex; justify-content: center; align-items: center;">
+    <RouterLink to="/">介绍页面</RouterLink> |
+    <RouterLink to="/game">游戏demo页面</RouterLink>
   </div>
 
   <RouterView v-slot="{ Component }">

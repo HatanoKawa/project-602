@@ -1,5 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Introduction from "@/views/Introduction.vue";
+import { createRouter, createWebHistory } from 'vue-router';
+import IntroductionPage from "@/views/introduction/IntroductionPage.vue";
 import GamePage from "@/views/GamePage.vue";
 
 const router = createRouter({
@@ -8,7 +8,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'Introduction',
-      component: Introduction,
+      component: IntroductionPage,
     },
     {
       path: '/game',
@@ -16,6 +16,6 @@ const router = createRouter({
       component: GamePage,
     }
   ]
-})
+});
 
-export default router
+export default router;

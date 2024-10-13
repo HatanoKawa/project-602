@@ -68,6 +68,9 @@ export const useGameCoreStore = defineStore('game-core', () => {
   const stopGame = () => {
     clearInterval(gameRunningInterval);
     gameRunningInterval = null;
+
+    const logStore = useLogStore();
+    logStore.addGameStateChangeLog('游戏结束');
     // todo Stop Game Logic
   };
   

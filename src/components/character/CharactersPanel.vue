@@ -27,7 +27,6 @@ const xpGaugeRate = computed(() => xpGauge.value / xpGaugeMax.value * 100);
     <div>
       <span>当前等级：</span>
       <span>{{ gameCoreStore.level }}</span>
-      <button v-show="gameCoreStore.debugMode" @click="equipmentStore.addRandomNewChar()">Add</button>
     </div>
     <div>
       <span>升级进度: </span>
@@ -55,7 +54,7 @@ const xpGaugeRate = computed(() => xpGauge.value / xpGaugeMax.value * 100);
         {{ item || '-' }}
       </div>
     </div>
-    Equipment area
+    汉字表
     <div id="char-container">
       <template v-for="(row, rowIndex) in equipmentStore.charSlotList" :key="rowIndex">
         <div

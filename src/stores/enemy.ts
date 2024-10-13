@@ -286,6 +286,7 @@ export const useEnemyStore = defineStore('enemy', () => {
     mapSlotList,
     mapIsEmpty,
     currentEnemyStateMultipliers,
+    currentEnemyRank,
 
     gameFlushHandler,
     getEnemyPositionByAttackType,

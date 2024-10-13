@@ -28,6 +28,10 @@ const enemyMultiplierStr = computed(() => {
         <span>敌人属性倍率：</span>
         <span>{{ enemyMultiplierStr }}</span>
       </div>
+      <div class="label-value-container">
+        <span>当前难度等级：</span>
+        <span>{{ enemyStore.currentEnemyRank }}</span>
+      </div>
     </div>
   </div>
 </template>
@@ -53,5 +57,6 @@ const enemyMultiplierStr = computed(() => {
 #enemy-panel-status {
   width: 200px;
   height: 100%;
+  padding: 12px;
 }
 </style>

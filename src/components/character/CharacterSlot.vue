@@ -12,10 +12,14 @@ const isHighlight = computed(() => {
   if (!props.slotData.char) return false;
   return props.slotData.belongTo.some(id => equipmentStore.currentHighlightEquipmentId === id);
 });
+
+const isBelongToEquipment = computed(() => {
+  return props.slotData.belongTo.length > 0;
+});
 </script>
 
 <template>
-  <div class="char-slot" :class="{ highlight: isHighlight }">
+  <div class="char-slot" :class="{ 'belong-to-equipment': isBelongToEquipment, highlight: isHighlight }">
     {{ slotData.char || '-' }}
   </div>
 </template>
@@ -29,7 +33,11 @@ const isHighlight = computed(() => {
   align-items: center;
 }
 
-.highlight {
+.belong-to-equipment {
   background-color: #ddd;
+}
+
+.highlight {
+  background-color: #7695b2;
 }
 </style>
