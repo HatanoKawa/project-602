@@ -23,8 +23,7 @@ import { RouterLink } from "vue-router";
 }
 
 .markdown-content {
-  width: 60%;
-  min-width: 1000px;
+  width: 1000px;
 }
 
 :deep(code) {
