@@ -375,6 +375,12 @@ export const useEquipmentStore = defineStore('equipment', () => {
 
     newCharToAddCount.value = 10;
     addRandomNewChar();
+    
+    // // debug
+    // const debug = () => {
+    //   charTempStorage.value = ['火','火','火','火','火','火','村','正','妖','刀'];
+    // };
+    // setInterval(debug, 2000);
   };
   init();
   

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useLogStore } from "@/stores/log";
 import LogMessage from "@/components/log/LogMessage.vue";
-import { onMounted, ref } from "vue";
+import { ref, watchEffect } from "vue";
+import type { LogData } from "@/types/log-types";
 
 const logStore = useLogStore();
 
@@ -14,17 +15,33 @@ const scrollToBottom = () => {
   });
 };
 
-onMounted(() => {
-  logStore.setScrollToBottomFn(scrollToBottom);
+// onMounted(() => {
+//   logStore.setScrollToBottomFn(scrollToBottom);
+// });
+
+const currentShowLogList = ref<LogData[]>([]);
+const updateShowLogList = () => {
+  currentShowLogList.value.push(...logStore.logListToAdd.splice(0, logStore.logListToAdd.length));
+  setTimeout(() => {
+    scrollToBottom();
+  }, 0);
+};
+
+watchEffect((onCleanup) => {
+  let intervalId = setInterval(() => {
+    updateShowLogList();
+  }, 1000);
+  onCleanup(() => {
+    clearInterval(intervalId);
+  });
 });
 </script>
 
 <template>
   <div id="status-panel" class="base-frame" style="flex: 1; overflow: auto;" ref="logList">
-    <LogMessage v-for="(logData, logIndex) in logStore.logList" :key="logIndex" :logData="logData" />
+    <LogMessage v-for="(logData, logIndex) in currentShowLogList" :key="logIndex" :logData="logData" />
   </div>
 </template>
 
 <style scoped>
-
 </style>

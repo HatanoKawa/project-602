@@ -3,10 +3,18 @@ import { ref } from "vue";
 import { type LogData, LogType } from "@/types/log-types";
 
 export const useLogStore = defineStore('log', () => {
-  const logList = ref<LogData[]>([]);
+  const fullLogList = ref<LogData[]>([]);
+  const logListToAdd = ref<LogData[]>([]);
 
   const addEquipmentAttackLog = (equipmentId: string, equipmentName: string, target: string[], damage: number) => {
-    logList.value.push({
+    fullLogList.value.push({
+      logType: LogType.equipmentAttack,
+      equipmentId,
+      equipmentName,
+      target,
+      damage,
+    });
+    logListToAdd.value.push({
       logType: LogType.equipmentAttack,
       equipmentId,
       equipmentName,
@@ -16,7 +24,14 @@ export const useLogStore = defineStore('log', () => {
   };
   
   const addElementalEffectLog = (elementalEffectName: string, elementalEffectColor: string, target: string[], damage: number) => {
-    logList.value.push({
+    fullLogList.value.push({
+      logType: LogType.elementalEffect,
+      elementalEffectName,
+      elementalEffectColor,
+      target,
+      damage,
+    });
+    logListToAdd.value.push({
       logType: LogType.elementalEffect,
       elementalEffectName,
       elementalEffectColor,
@@ -26,14 +41,22 @@ export const useLogStore = defineStore('log', () => {
   };
   
   const addGameStateChangeLog = (text: string) => {
-    logList.value.push({
+    fullLogList.value.push({
+      logType: LogType.gameStateChange,
+      text,
+    });
+    logListToAdd.value.push({
       logType: LogType.gameStateChange,
       text,
     });
   };
   
   const addEnemyDieLog = (enemyName: string) => {
-    logList.value.push({
+    fullLogList.value.push({
+      logType: LogType.enemyDie,
+      enemyName,
+    });
+    logListToAdd.value.push({
       logType: LogType.enemyDie,
       enemyName,
     });
@@ -46,16 +69,17 @@ export const useLogStore = defineStore('log', () => {
   };
   
   const gameFlushHandler = (increaseTime: number) => {
-    if (scrollToBottom.value) {
-      const tempFn = scrollToBottom.value;
-      setTimeout(() => {
-        tempFn();
-      });
-    }
+    // if (scrollToBottom.value) {
+    //   const tempFn = scrollToBottom.value;
+    //   setTimeout(() => {
+    //     tempFn();
+    //   });
+    // }
   };
   
   return {
-    logList,
+    fullLogList,
+    logListToAdd,
 
     addEquipmentAttackLog,
     addElementalEffectLog,

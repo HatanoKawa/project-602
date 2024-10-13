@@ -182,21 +182,28 @@ export const useEnemyStore = defineStore('enemy', () => {
   // 点燃效果，对十字形4个方向1格内的敌人造成伤害
   const igniteEffect = (enemyPosition: [number, number]) => {
     const crossPositionList = expandAttackRange_Cross([enemyPosition]);
+
+    logStore.addElementalEffectLog(
+      '点燃',
+      'orange',
+      crossPositionList.map(([rowIndex, colIndex]) => {
+        if (!mapSlotList.value[rowIndex][colIndex].enemy) return '';
+        return `[${rowIndex},${colIndex}] ${mapSlotList.value[rowIndex][colIndex].enemy!.tableData.name}`;
+      }).filter(str => str !== ''),
+      crossPositionList.reduce((acc, [rowIndex, colIndex]) => {
+        if (!mapSlotList.value[rowIndex][colIndex].enemy) return acc;
+        return acc + mapSlotList.value[rowIndex][colIndex].enemy!.healthMax * 0.1;
+      }, 0)
+    );
+
     crossPositionList.forEach(position => {
+      if (!mapSlotList.value[position[0]][position[1]].enemy) return;
       const enemyRealTimeData = mapSlotList.value[position[0]][position[1]].enemy;
       if (enemyRealTimeData) {
         enemyRealTimeData.health -= enemyRealTimeData.healthMax * 0.1;
         settleEnemyState(position);
       }
     });
-    
-    logStore.addElementalEffectLog(
-      '点燃',
-      'orange',
-      crossPositionList.map(([rowIndex, colIndex]) =>
-        `[${rowIndex},${colIndex}] ${mapSlotList.value[rowIndex][colIndex].enemy!.tableData.name}`),
-      crossPositionList.reduce((acc, [rowIndex, colIndex]) => acc + mapSlotList.value[rowIndex][colIndex].enemy!.healthMax * 0.1, 0)
-    );
   };
 
   // 结算敌人状态
