@@ -55,7 +55,7 @@ const currentHpGaugeColor = computed(() => getHpGaugeColor(currentEnemyHpRate.va
         <div
           class="gauge-bar"
           :style="{
-          width: `${currentEnemyHpRate}%`,
+            width: `${currentEnemyHpRate}%`,
             backgroundColor: currentHpGaugeColor,
           }"
         />
@@ -65,8 +65,8 @@ const currentHpGaugeColor = computed(() => getHpGaugeColor(currentEnemyHpRate.va
         <div
           class="gauge-bar"
           :style="{
-          width: `${currentEnemyGaugeRate_Fire}%`,
-            backgroundColor: currentHpGaugeColor,
+            width: `${currentEnemyGaugeRate_Fire}%`,
+            backgroundColor: 'orangered',
           }"
         />
         <div class="gauge-text">灼烧： {{ currentEnemyGauge_Fire }}/{{ currentEnemyGaugeMax_Fire }}</div>
@@ -75,8 +75,8 @@ const currentHpGaugeColor = computed(() => getHpGaugeColor(currentEnemyHpRate.va
         <div
           class="gauge-bar"
           :style="{
-          width: `${currentEnemyGaugeRate_Ice}%`,
-            backgroundColor: currentHpGaugeColor,
+            width: `${currentEnemyGaugeRate_Ice}%`,
+            backgroundColor: 'dodgerblue',
           }"
         />
         <div class="gauge-text">冰冻： {{ currentEnemyGauge_Ice }}/{{ currentEnemyGaugeMax_Ice }}</div>
@@ -85,8 +85,8 @@ const currentHpGaugeColor = computed(() => getHpGaugeColor(currentEnemyHpRate.va
         <div
           class="gauge-bar"
           :style="{
-          width: `${currentEnemyGaugeRate_Bleeding}%`,
-            backgroundColor: currentHpGaugeColor,
+            width: `${currentEnemyGaugeRate_Bleeding}%`,
+            backgroundColor: 'darkred',
           }"
         />
         <div class="gauge-text">流血： {{ currentEnemyGauge_Bleeding }}/{{ currentEnemyGaugeMax_Bleeding }}</div>
@@ -132,7 +132,7 @@ const currentHpGaugeColor = computed(() => getHpGaugeColor(currentEnemyHpRate.va
   top: 0;
   left: 0;
   transition: width 0.5s;
-  opacity: 0.5;
+  opacity: 0.7;
 }
 
 .gauge-text {

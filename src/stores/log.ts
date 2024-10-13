@@ -2,11 +2,26 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { type LogData, LogType } from "@/types/log-types";
 
+export enum ElementalEffectType {
+  Ignite = 'Ignite',
+  Freeze = 'Freeze',
+  Bleeding = 'Bleeding',
+}
+
 export const useLogStore = defineStore('log', () => {
   const fullLogList = ref<LogData[]>([]);
   const logListToAdd = ref<LogData[]>([]);
+  
+  const damageAnalysis = ref<{ [key: string]: number }>({
+    weapon: 0,
+    elemental_Ignite: 0,
+    elemental_Freeze: 0,
+    elemental_Bleeding: 0,
+  });
 
   const addEquipmentAttackLog = (equipmentId: string, equipmentName: string, target: string[], damage: number) => {
+    damageAnalysis.value.weapon += damage;
+    
     fullLogList.value.push({
       logType: LogType.equipmentAttack,
       equipmentId,
@@ -23,7 +38,19 @@ export const useLogStore = defineStore('log', () => {
     });
   };
   
-  const addElementalEffectLog = (elementalEffectName: string, elementalEffectColor: string, target: string[], damage: number) => {
+  const addElementalEffectLog = (type: ElementalEffectType, elementalEffectName: string, elementalEffectColor: string, target: string[], damage: number) => {
+    switch (type) {
+    case ElementalEffectType.Ignite:
+      damageAnalysis.value.elemental_Ignite += damage;
+      break;
+    case ElementalEffectType.Freeze:
+      damageAnalysis.value.elemental_Freeze += damage;
+      break;
+    case ElementalEffectType.Bleeding:
+      damageAnalysis.value.elemental_Bleeding += damage;
+      break;
+    }
+    
     fullLogList.value.push({
       logType: LogType.elementalEffect,
       elementalEffectName,
@@ -80,6 +107,8 @@ export const useLogStore = defineStore('log', () => {
   return {
     fullLogList,
     logListToAdd,
+
+    damageAnalysis,
 
     addEquipmentAttackLog,
     addElementalEffectLog,

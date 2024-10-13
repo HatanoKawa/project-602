@@ -5,7 +5,7 @@ import type { EnemyRealTimeData } from "@/types/enemy-types";
 import { tableData_Enemy } from "@/db";
 import type { WeaponRealTimeData } from "@/types/equipment-types";
 import { EquipmentAttackType } from "@/types/db-types";
-import { useLogStore } from "@/stores/log";
+import { ElementalEffectType, useLogStore } from "@/stores/log";
 
 export interface MapSlotData {
   enemy: EnemyRealTimeData | null;
@@ -184,6 +184,7 @@ export const useEnemyStore = defineStore('enemy', () => {
     const crossPositionList = expandAttackRange_Cross([enemyPosition]);
 
     logStore.addElementalEffectLog(
+      ElementalEffectType.Ignite,
       '点燃',
       'orange',
       crossPositionList.map(([rowIndex, colIndex]) => {
@@ -217,10 +218,11 @@ export const useEnemyStore = defineStore('enemy', () => {
         return;
       }
       while (enemyRealTimeData.elementalGauge_Ice >= enemyRealTimeData.tableData.elementalGaugeMax_Ice) {
-        const randomDamage = Math.floor(Math.random() * enemyRealTimeData.health);
+        const randomDamage = Math.max(Math.floor(Math.random() * enemyRealTimeData.health), 0);
         enemyRealTimeData.health -= randomDamage;
         enemyRealTimeData.elementalGauge_Ice = 0;
         logStore.addElementalEffectLog(
+          ElementalEffectType.Freeze,
           '冰冻',
           'blue',
           [`[${enemyPosition[0]},${enemyPosition[1]}] ${mapSlotList.value[enemyPosition[0]][enemyPosition[1]].enemy!.tableData.name}`],
@@ -231,6 +233,7 @@ export const useEnemyStore = defineStore('enemy', () => {
         enemyRealTimeData.health *= 0.8;
         enemyRealTimeData.elementalGauge_Bleeding = 0;
         logStore.addElementalEffectLog(
+          ElementalEffectType.Bleeding,
           '流血',
           'red',
           [`[${enemyPosition[0]},${enemyPosition[1]}] ${mapSlotList.value[enemyPosition[0]][enemyPosition[1]].enemy!.tableData.name}`],

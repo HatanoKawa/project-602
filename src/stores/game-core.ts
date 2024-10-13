@@ -70,7 +70,13 @@ export const useGameCoreStore = defineStore('game-core', () => {
     gameRunningInterval = null;
 
     const logStore = useLogStore();
-    logStore.addGameStateChangeLog('游戏结束');
+    const totalDamage =
+      logStore.damageAnalysis.weapon +
+      logStore.damageAnalysis.elemental_Ignite +
+      logStore.damageAnalysis.elemental_Freeze +
+      logStore.damageAnalysis.elemental_Bleeding;
+
+    logStore.addGameStateChangeLog(`游戏结束，总伤害为： ${totalDamage.toFixed(2)}`);
     // todo Stop Game Logic
   };
   

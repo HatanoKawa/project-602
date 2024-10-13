@@ -2,8 +2,10 @@
 import { useEnemyStore } from "@/stores/enemy";
 import EnemySlotCard from "@/components/enemy/EnemySlotCard.vue";
 import { computed } from "vue";
+import { useLogStore } from "@/stores/log";
 
 const enemyStore = useEnemyStore();
+const logStore = useLogStore();
 
 const enemyMultiplierStr = computed(() => {
   return `${(enemyStore.currentEnemyStateMultipliers * 100).toFixed(2)} %`;
@@ -24,13 +26,35 @@ const enemyMultiplierStr = computed(() => {
       </template>
     </div>
     <div id="enemy-panel-status">
-      <div class="label-value-container">
-        <span>敌人属性倍率：</span>
-        <span>{{ enemyMultiplierStr }}</span>
+      <div class="message-block">
+        <div class="message-title">游戏状态</div>
+        <div class="label-value-container">
+          <span>敌人属性倍率：</span>
+          <span>{{ enemyMultiplierStr }}</span>
+        </div>
+        <div class="label-value-container">
+          <span>当前难度等级：</span>
+          <span>{{ enemyStore.currentEnemyRank }}</span>
+        </div>
       </div>
-      <div class="label-value-container">
-        <span>当前难度等级：</span>
-        <span>{{ enemyStore.currentEnemyRank }}</span>
+      <div class="message-block">
+        <div class="message-title">伤害统计</div>
+        <div class="label-value-container">
+          <span>武器伤害：</span>
+          <span>{{ logStore.damageAnalysis.weapon.toFixed(2) }}</span>
+        </div>
+        <div class="label-value-container">
+          <span>点燃伤害：</span>
+          <span>{{ logStore.damageAnalysis.elemental_Ignite.toFixed(2) }}</span>
+        </div>
+        <div class="label-value-container">
+          <span>冰冻伤害：</span>
+          <span>{{ logStore.damageAnalysis.elemental_Freeze.toFixed(2) }}</span>
+        </div>
+        <div class="label-value-container">
+          <span>流血伤害：</span>
+          <span>{{ logStore.damageAnalysis.elemental_Bleeding.toFixed(2) }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -57,6 +81,16 @@ const enemyMultiplierStr = computed(() => {
 #enemy-panel-status {
   width: 200px;
   height: 100%;
-  padding: 12px;
+}
+
+.message-title {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.message-block {
+  margin: 12px;
+  padding-bottom: 6px;
+  border-bottom: solid 1px grey;
 }
 </style>
