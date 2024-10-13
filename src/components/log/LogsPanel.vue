@@ -3,8 +3,10 @@ import { useLogStore } from "@/stores/log";
 import LogMessage from "@/components/log/LogMessage.vue";
 import { ref, watchEffect } from "vue";
 import type { LogData } from "@/types/log-types";
+import { useGameCoreStore } from "@/stores/game-core";
 
 const logStore = useLogStore();
+const gameCore = useGameCoreStore();
 
 const logList = ref();
 const scrollToBottom = () => {
@@ -21,6 +23,7 @@ const scrollToBottom = () => {
 
 const currentShowLogList = ref<LogData[]>([]);
 const updateShowLogList = () => {
+  if (!gameCore.isRunning) return;
   currentShowLogList.value.push(...logStore.logListToAdd.splice(0, logStore.logListToAdd.length));
   setTimeout(() => {
     scrollToBottom();

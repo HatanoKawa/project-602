@@ -6,13 +6,14 @@ import { useLogStore } from "@/stores/log";
 
 export const useGameCoreStore = defineStore('game-core', () => {
 
-  const debugMode = ref(true);
+  const debugMode = ref(false);
 
   // 游戏状态刷新的时间间隔为 100ms
   const GAME_FLUSH_INTERVAL = 100;
   const GAME_SPEED_POSSIBLE_VALUES = [0.5, 1, 2, 4] as const;
   const gameSpeedMultiplier = ref<typeof GAME_SPEED_POSSIBLE_VALUES[number]>(1);
   const increaseTimePerFlush = computed(() => GAME_FLUSH_INTERVAL * gameSpeedMultiplier.value);
+  const isRunning = ref(false);
 
   // region 等级相关逻辑
   
@@ -63,11 +64,13 @@ export const useGameCoreStore = defineStore('game-core', () => {
   const pauseGame = () => {
     clearInterval(gameRunningInterval);
     gameRunningInterval = null;
+    isRunning.value = false;
   };
 
   const stopGame = () => {
     clearInterval(gameRunningInterval);
     gameRunningInterval = null;
+    isRunning.value = false;
 
     const logStore = useLogStore();
     const totalDamage =
@@ -83,6 +86,7 @@ export const useGameCoreStore = defineStore('game-core', () => {
   const startGame = () => {
     const logStore = useLogStore();
     logStore.addGameStateChangeLog('游戏开始');
+    isRunning.value = true;
 
     if (!gameRunningInterval) {
       gameRunningInterval = setInterval(gameStatusFlush, GAME_FLUSH_INTERVAL);
@@ -94,6 +98,7 @@ export const useGameCoreStore = defineStore('game-core', () => {
   
   return {
     debugMode,
+    isRunning,
 
     gameSpeedMultiplier,
     level,
